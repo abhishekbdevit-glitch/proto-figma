@@ -1,0 +1,2431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>DIGI-PHARMed Admin Portal</title>
+<style>
+:root{
+  --bg:#f4f3ef;--surface:#fff;--surface2:#f9f8f5;
+  --border:#e2e0d8;--border2:#ccc9be;
+  --text:#1a1916;--text2:#5a5850;--text3:#8a877e;
+  --accent:#1a4f8a;--accent-lt:#e8f0fa;--accent-md:#c5d8f5;
+  --green:#1b6b42;--green-lt:#e8f5ee;
+  --amber:#7a4d00;--amber-lt:#fef3da;
+  --red:#911111;--red-lt:#fef0f0;
+  --purple:#4a3aaf;--purple-lt:#f0eeff;
+  --teal:#0f6e56;--teal-lt:#e1f5ee;
+  --radius:10px;--radius-sm:6px;
+  --shadow:0 1px 3px rgba(0,0,0,.07),0 4px 12px rgba(0,0,0,.04);
+  --font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono','Fira Code',monospace;
+  --sidebar:260px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);font-size:14px;line-height:1.6;color:var(--text);background:var(--bg);min-height:100vh}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ── Layout ── */
+.shell{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:var(--sidebar);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.page-wrap{flex:1;overflow-y:auto;padding:24px 28px}
+
+/* ── Sidebar ── */
+.logo-area{padding:16px 18px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.logo-row{display:flex;align-items:center;gap:9px}
+.logo-box{width:30px;height:30px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex-shrink:0}
+.logo-name{font-size:13px;font-weight:700;color:var(--text);letter-spacing:-.2px}
+.logo-tag{font-size:10px;color:var(--text3);margin-top:1px}
+.role-badge{margin:10px 18px 0;padding:7px 12px;background:var(--accent-lt);border:1px solid var(--accent-md);border-radius:var(--radius-sm);font-size:11px}
+.role-badge .role-who{font-weight:700;color:var(--accent)}
+.role-badge .role-title{color:var(--text3);font-size:10px;margin-top:1px}
+.nav-group{padding:4px 0;border-bottom:1px solid var(--border)}
+.nav-group:last-child{border-bottom:none}
+
+/* ── Group header (clickable, collapses/expands items) ── */
+.nav-group-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 18px 9px 16px;
+  cursor:pointer;user-select:none;
+  transition:background .12s;
+}
+.nav-group-hdr:hover{background:var(--surface2)}
+.nav-group-hdr-left{display:flex;align-items:center;gap:7px}
+.nav-group-hdr-icon{font-size:13px;width:16px;text-align:center;opacity:.7;flex-shrink:0}
+.nav-group-hdr-label{
+  font-size:11px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--text3);
+}
+.nav-group-hdr.has-active .nav-group-hdr-label{color:var(--accent)}
+.nav-group-chevron{
+  font-size:9px;color:var(--text3);
+  transition:transform .2s ease;flex-shrink:0;
+}
+.nav-group-chevron.open{transform:rotate(180deg)}
+.nav-group-badge{
+  font-size:9px;font-weight:700;padding:1px 5px;border-radius:20px;
+  background:var(--red);color:#fff;margin-left:4px;
+}
+.nav-group-badge.amber{background:var(--amber-lt);color:var(--amber)}
+
+/* ── Items container — collapses smoothly ── */
+.nav-items{
+  overflow:hidden;
+  max-height:0;
+  transition:max-height .22s ease;
+}
+.nav-items.open{max-height:400px}
+
+/* ── Individual nav items ── */
+.nav-item{
+  display:flex;align-items:center;gap:9px;
+  padding:7px 18px 7px 34px; /* extra left indent under group */
+  cursor:pointer;font-size:12.5px;color:var(--text2);
+  border-left:2px solid transparent;
+  transition:all .12s;user-select:none;
+}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{
+  background:var(--accent-lt);color:var(--accent);
+  border-left-color:var(--accent);font-weight:600;
+}
+.nav-icon{font-size:12px;width:14px;text-align:center;flex-shrink:0;opacity:.7}
+.nav-badge{margin-left:auto;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:20px;background:var(--red);color:#fff}
+.nav-badge.green{background:var(--green-lt);color:var(--green)}
+.nav-badge.amber{background:var(--amber-lt);color:var(--amber)}
+
+/* ── Topbar ── */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:16px}
+.topbar-left{display:flex;flex-direction:column;gap:1px}
+.page-title{font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.3px}
+.breadcrumb{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px}
+.breadcrumb span{color:var(--text2)}
+.bc-sep{color:var(--border2)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:6px 12px;width:280px}
+.search-box input{border:none;background:transparent;font-size:12.5px;color:var(--text);font-family:var(--font);outline:none;flex:1}
+.search-box input::placeholder{color:var(--text3)}
+.topbar-btn{padding:6px 14px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all .12s;font-family:var(--font)}
+.topbar-btn.ghost{background:transparent;color:var(--text2);border-color:var(--border2)}
+.topbar-btn.ghost:hover{background:var(--surface2);color:var(--text)}
+.topbar-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.topbar-btn.primary:hover{background:#163f72}
+.notif-btn{width:32px;height:32px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;font-size:14px}
+.notif-dot{position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--red);border:2px solid var(--surface)}
+
+/* ── Shared primitives ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 12px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all .12s;font-family:var(--font)}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:#163f72}
+.btn-ghost{background:transparent;color:var(--text2);border-color:var(--border2)}
+.btn-ghost:hover{background:var(--surface2);color:var(--text)}
+.btn-success{background:var(--green-lt);color:var(--green);border-color:#a8d4b8}
+.btn-success:hover{background:var(--green);color:#fff}
+.btn-danger{background:var(--red-lt);color:var(--red);border-color:#f5b8b8}
+.btn-danger:hover{background:var(--red);color:#fff}
+.btn-warn{background:var(--amber-lt);color:var(--amber);border-color:#f5dcb0}
+.btn-sm{padding:4px 9px;font-size:11px}
+.btn-xs{padding:2px 7px;font-size:10.5px}
+
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
+.badge-green{background:var(--green-lt);color:var(--green)}
+.badge-amber{background:var(--amber-lt);color:var(--amber)}
+.badge-red{background:var(--red-lt);color:var(--red)}
+.badge-blue{background:var(--accent-lt);color:var(--accent)}
+.badge-purple{background:var(--purple-lt);color:var(--purple)}
+.badge-teal{background:var(--teal-lt);color:var(--teal)}
+.badge-gray{background:var(--surface2);color:var(--text3);border:1px solid var(--border)}
+
+.age-tag{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px}
+.age-ok{background:var(--green-lt);color:var(--green)}
+.age-warn{background:var(--amber-lt);color:var(--amber)}
+.age-crit{background:var(--red-lt);color:var(--red)}
+
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;display:inline-block}
+.dot-green{background:var(--green)}.dot-amber{background:var(--amber)}.dot-red{background:var(--red)}.dot-blue{background:var(--accent)}
+
+/* ── KPI strip ── */
+.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;display:flex;flex-direction:column;gap:6px}
+.kpi-top{display:flex;align-items:center;justify-content:space-between}
+.kpi-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.kpi-delta{font-size:10.5px;font-weight:600;padding:2px 6px;border-radius:20px}
+.kpi-delta.up{background:var(--green-lt);color:var(--green)}
+.kpi-delta.down{background:var(--red-lt);color:var(--red)}
+.kpi-delta.neutral{background:var(--surface2);color:var(--text3)}
+.kpi-val{font-size:26px;font-weight:700;letter-spacing:-1px;color:var(--text);line-height:1}
+.kpi-lbl{font-size:11px;color:var(--text3);font-weight:500}
+.kpi-sub{font-size:10.5px;color:var(--text3)}
+
+/* ── Panel grid ── */
+.panel-row{display:grid;gap:16px;margin-bottom:16px}
+.panel-row-3{grid-template-columns:repeat(3,1fr)}
+.panel-row-2{grid-template-columns:2fr 1fr}
+.panel-row-4{grid-template-columns:repeat(4,1fr)}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.panel-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface)}
+.panel-title{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+.panel-body{padding:0}
+.panel-scroll{max-height:280px;overflow-y:auto}
+
+/* ── Tables ── */
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{padding:8px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);background:var(--surface2);border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+.data-table td{padding:9px 14px;font-size:12.5px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:#fafaf8}
+.data-table tr.row-crit td{background:#fff9f9}
+
+.entity-name{font-weight:600;color:var(--text);font-size:13px}
+.entity-sub{font-size:10.5px;color:var(--text3);margin-top:1px;font-family:var(--mono)}
+.action-btns{display:flex;gap:5px;align-items:center}
+
+/* ── Approval queue item ── */
+.approval-item{padding:10px 14px;border-bottom:1px solid var(--border);transition:background .1s}
+.approval-item:last-child{border-bottom:none}
+.approval-item:hover{background:var(--surface2)}
+.ai-top{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.ai-name{font-size:12.5px;font-weight:600;color:var(--text);flex:1}
+.ai-body{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ai-meta{font-size:11px;color:var(--text3)}
+.ai-actions{display:flex;gap:4px}
+
+/* ── Alert item ── */
+.alert-item{padding:9px 14px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start}
+.alert-item:last-child{border-bottom:none}
+.alert-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:1px}
+.alert-body{flex:1}
+.alert-title{font-size:12px;font-weight:600;color:var(--text)}
+.alert-desc{font-size:11px;color:var(--text3);margin-top:2px;line-height:1.4}
+.alert-time{font-size:10px;color:var(--text3);white-space:nowrap;margin-top:2px}
+
+/* ── Heatmap ── */
+.heatmap-grid{display:grid;grid-template-columns:140px repeat(5,1fr);gap:1px;padding:12px;background:var(--border)}
+.hm-cell{background:var(--surface);padding:8px;font-size:11px;text-align:center}
+.hm-label{background:var(--surface);padding:8px;font-size:11px;font-weight:600;color:var(--text2);text-align:right}
+.hm-header{background:var(--surface2);padding:6px 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);text-align:center}
+.hm-val{display:inline-flex;align-items:center;justify-content:center;width:36px;height:22px;border-radius:4px;font-size:11px;font-weight:700}
+.hm-90{background:#c6e9d4;color:#1b6b42}
+.hm-70{background:#fef3da;color:#7a4d00}
+.hm-50{background:#fde8c8;color:#913b00}
+.hm-30{background:#fef0f0;color:#911111}
+
+/* ── Pipeline funnel ── */
+.funnel{display:flex;flex-direction:column;gap:3px;padding:12px 14px}
+.funnel-row{display:flex;align-items:center;gap:10px}
+.funnel-label{font-size:11.5px;color:var(--text2);width:110px;flex-shrink:0}
+.funnel-bar-wrap{flex:1;background:var(--surface2);border-radius:3px;height:18px;overflow:hidden;position:relative}
+.funnel-bar{height:100%;border-radius:3px;transition:width .3s}
+.funnel-count{font-size:11px;font-weight:700;color:var(--text);width:30px;text-align:right;flex-shrink:0}
+.funnel-pct{font-size:10px;color:var(--text3);width:30px;text-align:right;flex-shrink:0}
+
+/* ── Inspector pool ── */
+.inspector-stat{display:flex;align-items:center;justify-content:space-between;padding:7px 14px;border-bottom:1px solid var(--border);font-size:12px}
+.inspector-stat:last-child{border-bottom:none}
+.inspector-stat-label{color:var(--text2)}
+.inspector-stat-val{font-weight:700;font-family:var(--mono);color:var(--text)}
+
+/* ── Finance panel ── */
+.finance-bar{padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.fee-row{display:flex;align-items:center;gap:10px}
+.fee-course{font-size:11.5px;color:var(--text2);width:80px;flex-shrink:0}
+.fee-bar-wrap{flex:1;background:var(--surface2);border-radius:3px;height:14px;overflow:hidden}
+.fee-bar{height:100%;background:var(--accent);border-radius:3px}
+.fee-amt{font-size:11px;font-weight:700;color:var(--text);white-space:nowrap;font-family:var(--mono)}
+.fee-pct{font-size:10px;color:var(--text3);width:36px;text-align:right}
+
+/* ── Quick actions ── */
+.quick-actions{display:flex;flex-direction:column;gap:5px;padding:10px}
+.qa-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--radius-sm);cursor:pointer;border:1px solid var(--border);background:var(--surface2);transition:all .12s;font-size:12.5px;color:var(--text2)}
+.qa-item:hover{background:var(--accent-lt);color:var(--accent);border-color:var(--accent-md)}
+.qa-icon{font-size:14px;width:16px;text-align:center}
+
+/* ── Module pages ── */
+.module-page{max-width:1400px}
+.page-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.filter-chip{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;transition:all .12s;font-family:var(--font)}
+.filter-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.filter-chip:hover:not(.active){border-color:var(--accent);color:var(--accent)}
+.spacer{flex:1}
+
+.card-table{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
+.ct-header{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface2)}
+.ct-title{font-size:13px;font-weight:700;color:var(--text)}
+
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+.stat-val{font-size:24px;font-weight:700;letter-spacing:-.8px;color:var(--text);margin-bottom:3px}
+.stat-lbl{font-size:11px;color:var(--text3);font-weight:500}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:2px}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.form-field{display:flex;flex-direction:column;gap:5px}
+.form-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text2)}
+.form-input{border:1px solid var(--border2);border-radius:var(--radius-sm);padding:7px 10px;font-size:13px;font-family:var(--font);color:var(--text);background:var(--surface2);transition:border-color .15s;width:100%}
+.form-input:focus{outline:none;border-color:var(--accent);background:var(--surface)}
+select.form-input{cursor:pointer}
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px}
+.form-section-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+
+.reg-strip{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;display:flex;gap:10px;font-size:11.5px;color:var(--text2);line-height:1.5}
+
+.timeline{display:flex;flex-direction:column;gap:0;padding:12px 14px}
+.tl-item{display:flex;gap:12px;align-items:flex-start;padding-bottom:14px;position:relative}
+.tl-item::before{content:'';position:absolute;left:10px;top:22px;bottom:0;width:1px;background:var(--border)}
+.tl-item:last-child::before{display:none}
+.tl-dot{width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;z-index:1}
+.tl-dot-green{background:var(--green-lt);color:var(--green);border:2px solid var(--green)}
+.tl-dot-amber{background:var(--amber-lt);color:var(--amber);border:2px solid var(--amber)}
+.tl-dot-red{background:var(--red-lt);color:var(--red);border:2px solid var(--red)}
+.tl-dot-gray{background:var(--surface2);color:var(--text3);border:2px solid var(--border2)}
+.tl-body{flex:1}
+.tl-title{font-size:12.5px;font-weight:600;color:var(--text)}
+.tl-meta{font-size:11px;color:var(--text3);margin-top:2px}
+
+.grievance-item{padding:10px 14px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:24px 1fr 80px 90px 80px;gap:10px;align-items:center;transition:background .1s}
+.grievance-item:hover{background:var(--surface2)}
+.grievance-item:last-child{border-bottom:none}
+
+.sla-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.sla-fill{height:100%;border-radius:3px}
+
+/* ── Role switcher ── */
+.role-switcher{display:flex;gap:5px;padding:10px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.role-chip{padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:600;border:1px solid var(--border2);cursor:pointer;transition:all .12s;font-family:var(--font)}
+.role-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.role-chip:hover:not(.active){background:var(--accent-lt);color:var(--accent)}
+
+/* ── Misc ── */
+.section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:14px;overflow:hidden}
+.section-hdr{padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.section-title{font-size:13px;font-weight:700;color:var(--text)}
+.section-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.section-body{padding:14px 16px}
+.empty-state{text-align:center;padding:32px 20px;color:var(--text3);font-size:13px}
+.divider-h{height:1px;background:var(--border);margin:12px 0}
+.flex-row{display:flex;align-items:center;gap:8px}
+.mono{font-family:var(--mono);font-size:11.5px}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ═══════════════ SIDEBAR ═══════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="logo-area">
+    <div class="logo-row">
+      <div class="logo-box">DP</div>
+      <div>
+        <div class="logo-name">DIGI-PHARMed</div>
+        <div class="logo-tag">Pharmacy Council of India</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Role switcher -->
+  <div class="role-switcher">
+    <div class="role-chip active" onclick="switchRole('registrar',this)">Registrar</div>
+    <div class="role-chip" onclick="switchRole('inspector',this)">Inspector</div>
+    <div class="role-chip" onclick="switchRole('accounts',this)">Accounts</div>
+    <div class="role-chip" onclick="switchRole('scrutinizer',this)">Scrutinizer</div>
+  </div>
+
+  <div class="role-badge" id="role-badge">
+    <div class="role-who" id="role-who">Dr. Ramesh Kumar</div>
+    <div class="role-title" id="role-title">Registrar — PCI HQ, New Delhi</div>
+  </div>
+
+  <nav id="nav-root">
+    <!-- rendered by JS -->
+  </nav>
+</aside>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<div class="main">
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="page-title" id="page-title">Dashboard & Analytics</div>
+      <div class="breadcrumb">Admin Portal <span class="bc-sep">›</span> <span id="page-crumb">Overview</span></div>
+    </div>
+    <div class="topbar-right">
+      <div class="search-box">
+        <span style="font-size:13px;color:var(--text3)">🔍</span>
+        <input placeholder="Search institutions, inspectors, tickets…" id="global-search"/>
+      </div>
+      <div class="notif-btn" title="Notifications"><span>🔔</span><div class="notif-dot"></div></div>
+      <button class="topbar-btn ghost" onclick="nav('config')">⚙ Settings</button>
+      <button class="topbar-btn primary">Export</button>
+    </div>
+  </header>
+
+  <!-- Page content -->
+  <div class="page-wrap" id="page-content">
+    <!-- rendered by JS -->
+  </div>
+</div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════════════════
+// All 23 module IDs — used to give Registrar full access
+const ALL_MODULES = [
+  'dashboard','reports','audit',
+  'institutions','infrastructure','equipment','library','hospital',
+  'student','pharmacist','inspector_mgmt','employer',
+  'inspection','workflow','ea','grievance',
+  'finance','finance_recon',
+  'master_data','general_info','user_roles','communication','config',
+];
+
+const ROLES = {
+  registrar:   {
+    name:'Dr. Ramesh Kumar', title:'Registrar — PCI HQ, New Delhi',
+    modules: ALL_MODULES,
+  },
+  inspector:   {
+    name:'Er. Priya Sharma', title:'Inspector Approver — PCI HQ',
+    modules:['dashboard','inspector_mgmt','inspection','reports','audit','grievance','communication'],
+  },
+  accounts:    {
+    name:'Suresh Menon', title:'Accounts Team — Finance Division',
+    modules:['dashboard','finance','finance_recon','reports','audit','grievance','communication'],
+  },
+  scrutinizer: {
+    name:'Dr. Kavitha Nair', title:'Scrutinizer — South Zone, PCI',
+    modules:['dashboard','institutions','infrastructure','equipment','library','hospital','ea','workflow','inspection','reports','audit','grievance','communication'],
+  },
+};
+
+const NAV_GROUPS = [
+  { label:'Governance',   items:[
+    { id:'dashboard',     icon:'📊', label:'Dashboard',          badge:null },
+    { id:'reports',       icon:'📈', label:'Reports & MIS',       badge:null },
+    { id:'audit',         icon:'🔐', label:'Audit Logs',          badge:null },
+  ]},
+  { label:'Institutions', items:[
+    { id:'institutions',  icon:'🏛️', label:'Institution Mgmt',   badge:'12', badgeCls:'amber' },
+    { id:'infrastructure',icon:'🏗️', label:'Infrastructure',      badge:null },
+    { id:'equipment',     icon:'⚗️', label:'Equipment',           badge:null },
+    { id:'library',       icon:'📚', label:'Library',             badge:null },
+    { id:'hospital',      icon:'🏥', label:'Hospital Affiliations',badge:null },
+  ]},
+  { label:'People',       items:[
+    { id:'student',       icon:'🎓', label:'Student Mgmt',        badge:'1.2k', badgeCls:'amber' },
+    { id:'pharmacist',    icon:'💊', label:'Pharmacist Mgmt',     badge:null },
+    { id:'inspector_mgmt',icon:'🔍', label:'Inspector Mgmt',      badge:'8', badgeCls:'amber' },
+    { id:'employer',      icon:'🏢', label:'Organisation / Employer',badge:null },
+  ]},
+  { label:'Operations',   items:[
+    { id:'inspection',    icon:'📋', label:'Inspection Mgmt',     badge:'5', badgeCls:'red' },
+    { id:'workflow',      icon:'⚙️', label:'Workflow Engine',      badge:'87', badgeCls:'red' },
+    { id:'ea',            icon:'🎓', label:'Examining Authority',  badge:null },
+    { id:'grievance',     icon:'🎫', label:'Grievance Mgmt',       badge:'23', badgeCls:'red' },
+  ]},
+  { label:'Finance',      items:[
+    { id:'finance',       icon:'💰', label:'Finance & Payments',   badge:null },
+    { id:'finance_recon', icon:'🧾', label:'Reconciliation',       badge:'3', badgeCls:'amber' },
+  ]},
+  { label:'Config',       items:[
+    { id:'master_data',   icon:'🗄️', label:'Master Data',          badge:null },
+    { id:'general_info',  icon:'📑', label:'General Info',         badge:null },
+    { id:'user_roles',    icon:'👥', label:'User & Roles',         badge:null },
+    { id:'communication', icon:'📣', label:'Communication',        badge:null },
+    { id:'config',        icon:'🔧', label:'Config & Settings',    badge:null },
+  ]},
+];
+
+let currentRole = 'registrar';
+let currentPage = 'dashboard';
+
+// ════════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════════
+// ── Group icons for the 6 categories ──────────────────────────────────────
+const GROUP_META = {
+  'Governance':   { icon:'⚖️' },
+  'Institutions': { icon:'🏛️' },
+  'People':       { icon:'👥' },
+  'Operations':   { icon:'⚙️' },
+  'Finance':      { icon:'💰' },
+  'Config':       { icon:'🔧' },
+};
+
+const openGroups = new Set(['Governance']);
+
+function getGroupForPage(page) {
+  for (const g of NAV_GROUPS) {
+    if (g.items.some(i => i.id === page)) return g.label;
+  }
+  return null;
+}
+
+function toggleGroup(label) {
+  if (openGroups.has(label)) openGroups.delete(label);
+  else openGroups.add(label);
+  renderNav();
+}
+
+function renderNav() {
+  const allowed = ROLES[currentRole].modules;
+  const activeGroup = getGroupForPage(currentPage);
+  if (activeGroup) openGroups.add(activeGroup);
+  const root = document.getElementById('nav-root');
+  root.innerHTML = NAV_GROUPS.map(g => {
+    const items = g.items.filter(i => allowed.includes(i.id));
+    if (!items.length) return '';
+    const isOpen    = openGroups.has(g.label);
+    const hasActive = items.some(i => i.id === currentPage);
+    const meta      = GROUP_META[g.label] || { icon:'📁' };
+    const totalRed  = items.filter(i=>i.badge&&i.badgeCls==='red').reduce((s,i)=>s+(parseInt(i.badge)||0),0);
+    const totalAmb  = items.filter(i=>i.badge&&i.badgeCls==='amber').reduce((s,i)=>s+(parseInt(i.badge)||0),0);
+    const badgeHtml = totalRed>0 ? `<span class="nav-group-badge">${totalRed}</span>`
+                    : totalAmb>0 ? `<span class="nav-group-badge amber">${totalAmb}</span>` : '';
+    const itemsHtml = items.map(i => `
+      <div class="nav-item${currentPage===i.id?' active':''}" onclick="nav('${i.id}')">
+        <span class="nav-icon">${i.icon}</span>${i.label}
+        ${i.badge?`<span class="nav-badge ${i.badgeCls||''}">${i.badge}</span>`:''}
+      </div>`).join('');
+    return `
+      <div class="nav-group">
+        <div class="nav-group-hdr${hasActive?' has-active':''}" onclick="toggleGroup('${g.label}')">
+          <div class="nav-group-hdr-left">
+            <span class="nav-group-hdr-icon">${meta.icon}</span>
+            <span class="nav-group-hdr-label">${g.label}</span>
+            ${badgeHtml}
+          </div>
+          <span class="nav-group-chevron${isOpen?' open':''}">▼</span>
+        </div>
+        <div class="nav-items${isOpen?' open':''}">
+          ${itemsHtml}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function nav(page) {
+  currentPage = page;
+  renderNav();
+  const meta = PAGE_META[page] || { title: page, crumb: page };
+  document.getElementById('page-title').textContent = meta.title;
+  document.getElementById('page-crumb').textContent  = meta.crumb;
+  document.getElementById('page-content').innerHTML  = renderPage(page);
+}
+
+function switchRole(role, el) {
+  currentRole = role;
+  document.querySelectorAll('.role-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  const r = ROLES[role];
+  document.getElementById('role-who').textContent   = r.name;
+  document.getElementById('role-title').textContent = r.title;
+  nav(r.modules.includes('dashboard') ? 'dashboard' : r.modules[0]);
+}
+
+const PAGE_META = {
+  dashboard:     { title:'Dashboard & Analytics',   crumb:'Overview' },
+  institutions:  { title:'Institution Management',   crumb:'Institutions' },
+  infrastructure:{ title:'Infrastructure Management',crumb:'Infrastructure' },
+  equipment:     { title:'Equipment Management',     crumb:'Equipment' },
+  library:       { title:'Library Management',       crumb:'Library' },
+  hospital:      { title:'Hospital Management',      crumb:'Hospitals' },
+  student:       { title:'Student Management',       crumb:'Students' },
+  pharmacist:    { title:'Pharmacist Management',    crumb:'Pharmacists' },
+  inspector_mgmt:{ title:'Inspector Management',     crumb:'Inspectors' },
+  employer:      { title:'Organisation / Employer',  crumb:'Employers' },
+  inspection:    { title:'Inspection Management',    crumb:'Inspections' },
+  workflow:      { title:'Application Workflow Engine',crumb:'Workflow' },
+  ea:            { title:'Examining Authority',      crumb:'Examining Authorities' },
+  grievance:     { title:'Grievance Management',     crumb:'Grievances' },
+  finance:       { title:'Finance & Payment Mgmt',   crumb:'Finance' },
+  finance_recon: { title:'Reconciliation',           crumb:'Finance › Reconciliation' },
+  reports:       { title:'Reports & MIS',            crumb:'Reports' },
+  communication: { title:'Communication Management', crumb:'Communication' },
+  audit:         { title:'Master Lists & Audit',     crumb:'Audit' },
+  master_data:   { title:'Master Data Management',   crumb:'Master Data' },
+  general_info:  { title:'General Information',      crumb:'General Info' },
+  user_roles:    { title:'User & Role Management',   crumb:'Users & Roles' },
+  config:        { title:'Configuration & Settings', crumb:'Settings' },
+};
+
+// ════════════════════════════════════════════════════════
+// PAGE RENDERERS
+// ════════════════════════════════════════════════════════
+function renderPage(page) {
+  const fn = PAGES[page];
+  return fn ? fn() : `<div class="empty-state">Module not available for your role.</div>`;
+}
+
+const PAGES = {
+
+// ── 4.1 DASHBOARD & ANALYTICS (FR-DA-01 to FR-DA-07) ─────────────────────
+dashboard: () => `
+<div class="module-page">
+  <div class="kpi-strip">
+    ${kpi('🏛️','Total Institutions','8,462','124 new this session','up','var(--accent-lt)')}
+    ${kpi('⏳','Pending Approvals','342','87 SLA breached','down','var(--amber-lt)')}
+    ${kpi('🔍','Active Inspections','156','5 unassigned','neutral','var(--green-lt)')}
+    ${kpi('✅','Compliance Rate','71.4%','↑ 2.1% from last year','up','var(--green-lt)')}
+  </div>
+  <div class="kpi-strip">
+    ${kpi('💰','Fee Collected','₹4.2 Cr','Target ₹6.1 Cr · 69%','neutral','var(--teal-lt)')}
+    ${kpi('🎫','Open Grievances','23','8 SLA breached','down','var(--red-lt)')}
+    ${kpi('🎓','Enrolled Students','6,12,400','↑ 18,200 this year','up','var(--purple-lt)')}
+    ${kpi('⚠️','Deficiency Rate','28.6%','↓ 2.1% improvement','up','var(--surface2)')}
+  </div>
+  <div class="panel-row panel-row-3">
+    <div class="panel">
+      <div class="panel-hdr">
+        <div class="panel-title">⏳ Approval Queue <span class="badge badge-red">87 SLA breach</span></div>
+        <button class="btn btn-ghost btn-sm" onclick="nav('workflow')">View all →</button>
+      </div>
+      <div class="panel-scroll">
+        ${approvalItem('Seven Hills College of Pharmacy','B.Pharm — New Application','Awaiting Scrutiny','2h','ok')}
+        ${approvalItem('JSS College of Pharmacy','D.Pharm — Renewal 2026-27','Awaiting Verification','18h','warn')}
+        ${approvalItem('MAHE Manipal College','M.Pharm — Seat Increase','Query Raised','32h','crit')}
+        ${approvalItem('Amrita School of Pharmacy','Pharm.D — Inspection Report','Awaiting Final Approval','45h','crit')}
+        ${approvalItem('Sri Venkateshwara Pharmacy','B.Pharm — Renewal','Awaiting Scrutiny','1h','ok')}
+        ${approvalItem('Saveetha Pharmacy College','D.Pharm — New Course','In Scrutiny','6h','ok')}
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-hdr">
+        <div class="panel-title">📋 Inspection Tracker <span class="badge badge-amber">156 active</span></div>
+        <button class="btn btn-ghost btn-sm" onclick="nav('inspection')">View all →</button>
+      </div>
+      <div class="panel-scroll">
+        <table class="data-table"><thead><tr><th>Institution</th><th>Type</th><th>Status</th><th>Inspector</th></tr></thead><tbody>
+          ${inspRow('Seven Hills','Physical','Assigned','Raj Kumar')}
+          ${inspRow('JSS Mysuru','Virtual','In Progress','Priya S.')}
+          ${inspRow('MAHE Manipal','Physical','Report Due','Unassigned','crit')}
+          ${inspRow('Amrita Kochi','Physical','Completed','Anita M.')}
+          ${inspRow('KLE Belagavi','Virtual','Unassigned','—','crit')}
+          ${inspRow('SRM Chennai','Virtual','Scheduled','Suresh R.')}
+        </tbody></table>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-hdr"><div class="panel-title">🚨 Alerts & SLA Escalations</div><span class="badge badge-red">11</span></div>
+      <div class="panel-scroll">
+        ${alertItem('🔴','SLA Breach','3 workflow applications exceeded 72hr SLA — escalate to Registrar immediately','2 min ago','var(--red-lt)')}
+        ${alertItem('🟡','Payment Mismatch','Reconciliation error: ₹48,000 discrepancy in B.Pharm batch payments','14 min ago','var(--amber-lt)')}
+        ${alertItem('🟡','SIF Deadline','Submission window closes in 18 days — 1,240 institutions pending','1 hr ago','var(--amber-lt)')}
+        ${alertItem('🔴','Unassigned Inspections','5 inspections unassigned for >24 hours — FR-IS-02 violation','3 hrs ago','var(--red-lt)')}
+        ${alertItem('🟡','Inspector Pool Low','South Zone: only 2 available inspectors for 14 pending visits','5 hrs ago','var(--amber-lt)')}
+        ${alertItem('🔵','Master Data Updated','M.Pharm fee revised for session 2026-27 — effective immediately','Yesterday','var(--accent-lt)')}
+      </div>
+    </div>
+  </div>
+  <div class="panel-row" style="grid-template-columns:1.6fr 1fr 1fr">
+    <div class="panel">
+      <div class="panel-hdr"><div class="panel-title">🌡️ Compliance Heatmap — Course × Module (FR-DA-06)</div><button class="btn btn-ghost btn-sm" onclick="nav('reports')">Drill down →</button></div>
+      <div class="heatmap-grid">
+        <div class="hm-header"></div><div class="hm-header">Faculty</div><div class="hm-header">Infra</div><div class="hm-header">Equip.</div><div class="hm-header">Library</div><div class="hm-header">Students</div>
+        ${hmRow('B.Pharm',[74,68,81,92,88])}${hmRow('D.Pharm',[81,72,65,87,94])}${hmRow('M.Pharm',[91,85,78,96,82])}${hmRow('Pharm.D',[63,54,59,74,77])}
+      </div>
+      <div style="padding:8px 12px;font-size:10.5px;color:var(--text3)">Click any cell to filter institution list by that compliance dimension · Green ≥90 · Yellow 70–89 · Orange 50–69 · Red &lt;50</div>
+    </div>
+    <div class="panel">
+      <div class="panel-hdr"><div class="panel-title">💰 Payment Analytics (FR-DA-04)</div><button class="btn btn-ghost btn-sm" onclick="nav('finance')">Details →</button></div>
+      <div class="finance-bar">
+        ${feeBar('B.Pharm',69,'₹1.8 Cr')}${feeBar('D.Pharm',82,'₹0.9 Cr')}${feeBar('M.Pharm',57,'₹0.7 Cr')}${feeBar('Pharm.D',45,'₹0.5 Cr')}${feeBar('Inspector',88,'₹0.3 Cr')}
+      </div>
+      <div class="divider-h" style="margin:0 14px"></div>
+      <div style="padding:8px 14px;font-size:12px;color:var(--text2)">
+        <div style="display:flex;justify-content:space-between"><span>Collected</span><strong style="font-family:var(--mono)">₹4.2 Cr</strong></div>
+        <div style="display:flex;justify-content:space-between;margin-top:3px"><span>Target</span><strong style="font-family:var(--mono)">₹6.1 Cr</strong></div>
+        <div style="display:flex;justify-content:space-between;margin-top:3px;color:var(--red)"><span>Recon. Pending</span><strong style="font-family:var(--mono)">₹48,000</strong></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-hdr"><div class="panel-title">🎫 Grievance SLA (FR-DA-07)</div><button class="btn btn-ghost btn-sm" onclick="nav('grievance')">View all →</button></div>
+      <div class="panel-scroll">
+        ${grievanceRow('GR-1042','Fee refund — B.Pharm','SVCP Tirupati',2,24,'crit')}
+        ${grievanceRow('GR-1039','Inspector conduct','JSS Mysuru',1,48,'crit')}
+        ${grievanceRow('GR-1036','Result discrepancy','MAHE Manipal',3,18,'warn')}
+        ${grievanceRow('GR-1031','Portal login issue','KLE Belagavi',5,72,'ok')}
+        ${grievanceRow('GR-1029','Document rejection','Amrita Kochi',7,72,'ok')}
+      </div>
+    </div>
+  </div>
+  <div class="panel-row panel-row-4">
+    <div class="panel">
+      <div class="panel-hdr"><div class="panel-title">🔍 Inspector Pool (FR-DA-03)</div></div>
+      <div class="inspector-stat"><span class="inspector-stat-label">Total inspectors</span><span class="inspector-stat-val">284</span></div>
+      <div class="inspector-stat"><span class="inspector-stat-label">Active / assigned</span><span class="inspector-stat-val badge badge-blue" style="font-family:var(--mono)">156</span></div>
+      <div class="inspector-stat"><span class="inspector-stat-label">Available now</span><span class="inspector-stat-val badge badge-green" style="font-family:var(--mono)">89</span></div>
+      <div class="inspector-stat"><span class="inspector-stat-label">Pending approval</span><span class="inspector-stat-val badge badge-amber" style="font-family:var(--mono)">15</span></div>
+      <div class="inspector-stat" style="border-top:2px solid var(--border)"><span class="inspector-stat-label">South Zone gap</span><span class="inspector-stat-val badge badge-red">2 only</span></div>
+      <div style="padding:8px 14px"><button class="btn btn-primary btn-sm" style="width:100%" onclick="nav('inspector_mgmt')">Manage Pool →</button></div>
+    </div>
+    <div class="panel">
+      <div class="panel-hdr"><div class="panel-title">📋 Registration Backlogs</div></div>
+      <div class="inspector-stat"><span class="inspector-stat-label">Students pending</span><span class="inspector-stat-val badge badge-amber" style="font-family:var(--mono)">1,247</span></div>
+      <div class="inspector-stat"><span class="inspector-stat-label">Students verified</span><span class="inspector-stat-val badge badge-green" style="font-family:var(--mono)">6,12,400</span></div>
+      <div class="inspector-stat"><span class="inspector-stat-label">Pharmacists pending</span><span class="inspector-stat-val badge badge-amber" style="font-family:var(--mono)">834</span></div>
+      <div class="inspector-stat"><span class="inspector-stat-label">Pharmacists active</span><span class="inspector-stat-val badge badge-green" style="font-family:var(--mono)">1,42,600</span></div>
+      <div class="inspector-stat" style="border-top:2px solid var(--border)"><span class="inspector-stat-label">NHA listed</span><span class="inspector-stat-val">41,800</span></div>
+      <div style="padding:8px 14px;display:flex;gap:6px"><button class="btn btn-ghost btn-sm" style="flex:1" onclick="nav('student')">Students</button><button class="btn btn-ghost btn-sm" style="flex:1" onclick="nav('pharmacist')">Pharmacists</button></div>
+    </div>
+    <div class="panel">
+      <div class="panel-hdr"><div class="panel-title">⚙️ Workflow Pipeline (FR-DA-02)</div></div>
+      <div class="funnel">
+        ${funnelRow('Submitted',342,342,'var(--accent)')}
+        ${funnelRow('In Scrutiny',87,342,'#1a6f8a')}
+        ${funnelRow('In Verification',54,342,'var(--teal)')}
+        ${funnelRow('Query Raised',31,342,'var(--amber)')}
+        ${funnelRow('Resubmitted',18,342,'var(--purple)')}
+        ${funnelRow('Final Approval',12,342,'var(--green)')}
+        ${funnelRow('Rejected',7,342,'var(--red)')}
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-hdr"><div class="panel-title">⚡ Quick Actions</div></div>
+      <div class="quick-actions">
+        ${qa('📋','Assign Inspection','inspection')}
+        ${qa('🏛️','Review Institution','institutions')}
+        ${qa('⚙️','Workflow Engine','workflow')}
+        ${qa('📈','Generate MIS Report','reports')}
+        ${qa('🗄️','Update Master Data','master_data')}
+        ${qa('🎫','Grievance Queue','grievance')}
+        ${qa('💰','Finance Summary','finance')}
+        ${qa('👥','Manage Users','user_roles')}
+      </div>
+    </div>
+  </div>
+</div>`,
+
+// ── 4.2 USER & ROLE MANAGEMENT (FR-UR-01 to FR-UR-06) ────────────────────
+user_roles: () => `
+<div class="module-page">
+  <div class="reg-strip">👥 <span><strong>FR-UR-03:</strong> Centralised RBAC — assign permissions per role, per module, per action. <strong>FR-UR-06:</strong> Approval hierarchy configurable without code changes.</span></div>
+  <div class="stat-grid">
+    ${statCard('148','Total Admin Users','Across all ~20 roles')}
+    ${statCard('12','Pending Activation','New account requests','amber')}
+    ${statCard('6','Active Departments','PCI organisational units')}
+    ${statCard('3','Failed Logins','Security flags — 24 hrs')}
+  </div>
+  <div class="page-toolbar">
+    <div class="filter-chip active">All Roles</div>
+    <div class="filter-chip">Registrar</div>
+    <div class="filter-chip">Scrutinizer</div>
+    <div class="filter-chip">Sub-Scrutinizer</div>
+    <div class="filter-chip">Verifier</div>
+    <div class="filter-chip">Inspector Approver</div>
+    <div class="filter-chip">Accounts Team</div>
+    <div class="filter-chip">IT Team</div>
+    <div class="filter-chip">Policy Team</div>
+    <div class="spacer"></div>
+    <button class="btn btn-primary">+ Add Employee (FR-UR-01)</button>
+  </div>
+  <div class="card-table">
+    <div class="ct-header"><div class="ct-title">Employee Management — RBAC (FR-UR-01, FR-UR-03)</div>
+      <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm">Configure Hierarchy (FR-UR-06)</button><button class="btn btn-ghost btn-sm">Export</button></div>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Employee</th><th>Role</th><th>Dept / Zone</th><th>Assigned Workflows</th><th>Last Login</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${userRow('Dr. Ramesh Kumar','Registrar','HQ — New Delhi','All workflows — final approvals','2 min ago','Active')}
+        ${userRow('Dr. Kavitha Nair','Scrutinizer','South Zone','Institution, SIF, Infra, Equip.','1 hr ago','Active')}
+        ${userRow('Mohan Rao','Sub-Scrutinizer','South Zone','Initial scrutiny — B.Pharm, D.Pharm','3 hrs ago','Active')}
+        ${userRow('Suresh Menon','Accounts — Maker','HQ Finance','Finance entry, invoices','3 hrs ago','Active')}
+        ${userRow('Anita Verma','Accounts — Verifier','HQ Finance','Finance verification','Yesterday','Active')}
+        ${userRow('Priya Sharma','Inspector Approver','HQ','Inspector assignments, approvals','2 hrs ago','Active')}
+        ${userRow('Anand Kumar','IT Admin','HQ — IT','Config, users, integrations','2 days ago','Active')}
+        ${userRow('Rekha Pillai','Verifier','Kerala SPC','Doc verification, workflow review','Pending','Pending Activation','amber')}
+      </tbody>
+    </table>
+  </div>
+  <div class="panel-row" style="grid-template-columns:1fr 1fr">
+    <div class="form-card">
+      <div class="form-section-title">Department Management (FR-UR-05)</div>
+      ${deptRow('Registration & Approval','Registrar, Deputy Secretary, Verifier','12 users')}
+      ${deptRow('Scrutiny Division','Scrutinizer, Sub-Scrutinizer','18 users')}
+      ${deptRow('Finance Division','Accounts Maker, Verifier, Checker','8 users')}
+      ${deptRow('Inspection Division','Inspector Approver','6 users')}
+      ${deptRow('IT & Systems','IT Team, Administrator','4 users')}
+      ${deptRow('Policy & Compliance','Policy Team','5 users')}
+    </div>
+    <div class="form-card">
+      <div class="form-section-title">Approval Hierarchy Configuration (FR-UR-06)</div>
+      <div style="font-size:11.5px;color:var(--text2);margin-bottom:12px">Define multi-level approval chains per workflow type — no code deployment required.</div>
+      ${wfHierarchyRow('Institution New Affiliation','Sub-Scrutinizer → Scrutinizer → Verifier → Registrar','4 levels')}
+      ${wfHierarchyRow('Institution Renewal','Scrutinizer → Verifier → Registrar','3 levels')}
+      ${wfHierarchyRow('Inspector Approval','Inspector Approver → Registrar','2 levels')}
+      ${wfHierarchyRow('Finance — Payment','Maker → Verifier → Checker','3 levels')}
+      ${wfHierarchyRow('EA Registration','Scrutinizer → Registrar','2 levels')}
+      <button class="btn btn-primary btn-sm" style="margin-top:12px">+ Add Workflow Chain</button>
+    </div>
+  </div>
+</div>`,
+
+// ── 4.3 MASTER DATA MANAGEMENT (FR-MD-01 to FR-MD-07) ────────────────────
+master_data: () => `
+<div class="module-page">
+  <div class="reg-strip">🗄️ <span><strong>FR-MD-01:</strong> All changes are versioned — old versions archived, not deleted. <strong>FR-MD-07:</strong> Full audit trail on every change: user, timestamp, before/after values.</span></div>
+  <div class="stat-grid">
+    ${statCard('9','Master Entities','Courses, Fees, Docs, Sessions…')}
+    ${statCard('48','Changes This Month','All versioned with audit trail')}
+    ${statCard('3','Pending Approval','Require Deputy Secretary sign-off','amber')}
+    ${statCard('v2.4','Current Version','Master data version — 2026-27')}
+  </div>
+  <div class="panel-row" style="grid-template-columns:1fr 1fr">
+    <div class="section-card">
+      <div class="section-hdr"><div><div class="section-title">Active Master Entities</div><div class="section-sub">Click Edit to modify — all changes create new version (FR-MD-01)</div></div></div>
+      <div style="padding:0">
+        ${masterDetailRow('📚','Course / Program Master','FR-MD-02','4 courses: B.Pharm, D.Pharm, M.Pharm, Pharm.D · Attributes & validity','v2.4','master_data')}
+        ${masterDetailRow('📅','Session / Academic Year','FR-MD-03','2026-27 Active · Window: 01 Aug – 31 Oct 2026','v1.2','master_data')}
+        ${masterDetailRow('📖','Subject Master','FR-MD-02','248 subjects across 4 courses, 8 semesters','v1.8','master_data')}
+        ${masterDetailRow('⚗️','Equipment Master','FR-EQ-01','Equipment lists per course type — sourced from regulations','v1.6','equipment')}
+        ${masterDetailRow('📄','Document Master','FR-MD-04','32 document types · Propagated to all dependent workflows automatically','v2.1','master_data')}
+        ${masterDetailRow('💰','Fee Master','FR-MD-03','8 fee types · Effective date managed · Per course & institution type','v2.3','finance')}
+        ${masterDetailRow('🗺️','State / District Master','FR-MD-01','29 States + UTs · 750 districts · SPC mapping','v1.0','master_data')}
+        ${masterDetailRow('⚙️','Workflow Master','FR-MD-05','Configurable approval chains per application type — no code deploy','v1.4','config')}
+        ${masterDetailRow('✅','Validation Rules Master','FR-MD-06','Field-level & business rules across all forms — configurable','v1.9','config')}
+      </div>
+    </div>
+    <div>
+      <div class="section-card" style="margin-bottom:14px">
+        <div class="section-hdr"><div><div class="section-title">⚠️ Pending Approval Changes</div><div class="section-sub">Require Deputy Secretary authorisation before taking effect</div></div></div>
+        <div style="padding:0">
+          ${pendingMasterRow('Fee Master','M.Pharm annual affiliation fee: ₹80,000 → ₹90,000 · Effective 2026-27','Suresh Menon','Awaiting DS')}
+          ${pendingMasterRow('Workflow Master','Pharm.D scrutiny: add Sub-Scrutinizer step before Scrutinizer','Dr. Ramesh K.','Awaiting DS')}
+          ${pendingMasterRow('Document Master','New requirement: GST Certificate for all institution types','IT Admin','Approved')}
+        </div>
+      </div>
+      <div class="form-card">
+        <div class="form-section-title">Edit Fee Master — 2026-27 (FR-MD-03)</div>
+        <div class="form-grid" style="margin-bottom:12px">
+          <div class="form-field"><label class="form-label">Course</label><select class="form-input"><option>B.Pharm</option><option>D.Pharm</option><option>M.Pharm</option><option>Pharm.D</option></select></div>
+          <div class="form-field"><label class="form-label">Fee Type</label><select class="form-input"><option>New Affiliation</option><option>Annual Renewal</option><option>Seat Increase</option><option>Course Addition</option></select></div>
+          <div class="form-field"><label class="form-label">Amount (₹)</label><input class="form-input" value="1,00,000"/></div>
+          <div class="form-field"><label class="form-label">Effective From</label><input type="date" class="form-input" value="2026-08-01"/></div>
+        </div>
+        <div class="form-field" style="margin-bottom:12px"><label class="form-label">Reason for Change</label><input class="form-input" placeholder="Mandatory — logged in audit trail (FR-MD-07)"/></div>
+        <button class="btn btn-primary">Submit for DS Approval</button>
+      </div>
+    </div>
+  </div>
+</div>`,
+
+// ── 4.4 GENERAL INFORMATION MANAGEMENT (FR-GI-01, FR-GI-02) ──────────────
+general_info: () => `
+<div class="module-page">
+  <div class="reg-strip">📑 <span><strong>FR-GI-01:</strong> Program Management — pharmacy education programmes with regulatory norms and eligibility. <strong>FR-GI-02:</strong> Examining Authority Master used for institution affiliation and student result validation.</span></div>
+  <div class="stat-grid">
+    ${statCard('4','Active Programmes','B.Pharm, D.Pharm, M.Pharm, Pharm.D')}
+    ${statCard('140+','Examining Authorities','Across all states and courses')}
+    ${statCard('29','States / UTs','With mapped EAs per course')}
+    ${statCard('8','Programme Updates','Pending gazette notification')}
+  </div>
+  <div class="panel-row" style="grid-template-columns:1fr 1fr">
+    <div class="section-card">
+      <div class="section-hdr"><div><div class="section-title">Programme Management (FR-GI-01)</div><div class="section-sub">Pharmacy education programmes · Regulatory norms · Eligibility criteria</div></div></div>
+      <table class="data-table">
+        <thead><tr><th>Programme</th><th>Duration</th><th>Gazette Ref.</th><th>Min. Intake</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${progRow('Bachelor of Pharmacy (B.Pharm)','4 years / 8 semesters','Gazette 362, Dec 2014','30 seats','Active')}
+          ${progRow('Diploma in Pharmacy (D.Pharm)','2 years / 4 semesters','Gazette 325, Nov 2014','30 seats','Active')}
+          ${progRow('Master of Pharmacy (M.Pharm)','2 years / 4 semesters','Gazette 412, Mar 2020','10 seats','Active')}
+          ${progRow('Doctor of Pharmacy (Pharm.D)','6 years (5+1 internship)','Gazette 435, Oct 2020','30 seats','Active')}
+        </tbody>
+      </table>
+      <div style="padding:10px 14px"><button class="btn btn-primary btn-sm">+ Add Programme</button></div>
+    </div>
+    <div class="section-card">
+      <div class="section-hdr"><div><div class="section-title">Examining Authority Master (FR-GI-02)</div><div class="section-sub">Approved EAs per course and state · Used for affiliation and result validation</div></div></div>
+      <div class="page-toolbar" style="padding:8px 14px;margin-bottom:0">
+        <select class="form-input" style="width:140px"><option>All States</option><option>Karnataka</option><option>Maharashtra</option><option>Kerala</option></select>
+        <select class="form-input" style="width:120px"><option>All Courses</option><option>B.Pharm</option><option>D.Pharm</option></select>
+        <div class="spacer"></div>
+        <button class="btn btn-primary btn-sm">+ Add EA</button>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Examining Authority</th><th>State</th><th>Courses</th><th>Institutions</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${eaMasterRow('Rajiv Gandhi University of Health Sciences','Karnataka','B.Pharm, M.Pharm, Pharm.D','124','Approved')}
+          ${eaMasterRow('Dr. NTR University of Health Sciences','Andhra Pradesh','B.Pharm, D.Pharm, M.Pharm','98','Approved')}
+          ${eaMasterRow('Kerala University of Health Sciences','Kerala','All Courses','87','Approved')}
+          ${eaMasterRow('Maharashtra University of Health Sciences','Maharashtra','B.Pharm, D.Pharm','142','Approved')}
+          ${eaMasterRow('Tamil Nadu Dr. MGR Medical University','Tamil Nadu','All Courses','110','Approved')}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>`,
+
+// ── 4.5 INSTITUTION MANAGEMENT (FR-IM-01 to FR-IM-06) ────────────────────
+institutions: () => `
+<div class="module-page">
+  <div class="reg-strip">🏛️ <span><strong>FR-IM-01:</strong> Multi-level approval: Document Verification → Scrutiny → Final Approval. <strong>FR-IM-06:</strong> Activate/Suspend/Deactivate — all changes audit-logged.</span></div>
+  <div class="stat-grid">
+    ${statCard('8,462','Total Institutions','8,212 active · 250 suspended')}
+    ${statCard('1,240','SIF Pending','Submission window open — 18 days left')}
+    ${statCard('342','In Approval Queue','87 scrutiny · 54 verification · 12 final')}
+    ${statCard('71.4%','Avg. Compliance','Across all active institutions')}
+  </div>
+  <div class="page-toolbar">
+    <div class="filter-chip active">All</div>
+    <div class="filter-chip">B.Pharm</div>
+    <div class="filter-chip">D.Pharm</div>
+    <div class="filter-chip">M.Pharm</div>
+    <div class="filter-chip">Pharm.D</div>
+    <div class="filter-chip">Pending Approval</div>
+    <div class="filter-chip">Query Raised</div>
+    <div class="filter-chip">Deficient</div>
+    <div class="filter-chip">Suspended</div>
+    <div class="spacer"></div>
+    <input class="form-input" style="width:220px" placeholder="Search institution, PCI code…"/>
+    <select class="form-input" style="width:160px"><option>All States</option><option>Karnataka</option><option>Maharashtra</option><option>Andhra Pradesh</option><option>Kerala</option></select>
+    <button class="btn btn-primary">+ Register New</button>
+  </div>
+  <div class="card-table">
+    <div class="ct-header"><div class="ct-title">Institution Registry — 8,462 institutions (FR-IM-02)</div>
+      <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm">Bulk Assign Scrutinizer</button><button class="btn btn-ghost btn-sm">Export CSV</button></div>
+    </div>
+    <table class="data-table">
+      <thead><tr><th><input type="checkbox"/></th><th>Institution</th><th>State</th><th>Courses Mapped</th><th>Compliance</th><th>SIF Status</th><th>Inspection</th><th>Last Action</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${instRow('Seven Hills College of Pharmacy','Andhra Pradesh','B.Pharm, M.Pharm',82,'Submitted','Assigned','2d ago')}
+        ${instRow('JSS College of Pharmacy','Karnataka','B.Pharm, D.Pharm, M.Pharm, Pharm.D',94,'Verified','Completed','5h ago')}
+        ${instRow('MAHE Manipal','Karnataka','All Courses',91,'Approved','Completed','1d ago')}
+        ${instRow('Amrita School of Pharmacy','Kerala','B.Pharm, Pharm.D',68,'Query Raised','Pending','3h ago','warn')}
+        ${instRow('KLE University','Karnataka','B.Pharm, M.Pharm',57,'Not Submitted','Unassigned','8d ago','crit')}
+        ${instRow('Saveetha Pharmacy','Tamil Nadu','B.Pharm, D.Pharm',73,'Submitted','Assigned','1d ago')}
+        ${instRow('SRM College of Pharmacy','Tamil Nadu','B.Pharm, M.Pharm',88,'Verified','Completed','2d ago')}
+        ${instRow('Poona College of Pharmacy','Maharashtra','B.Pharm, D.Pharm',61,'Not Submitted','Not Started','12d ago','warn')}
+      </tbody>
+    </table>
+  </div>
+</div>`,
+
+// ── 4.6 STUDENT MANAGEMENT (FR-SM-01 to FR-SM-05) ─────────────────────────
+student: () => `
+<div class="module-page">
+  <div class="reg-strip">🎓 <span><strong>FR-SM-01:</strong> Aadhaar-linked identity verification. <strong>FR-SM-02:</strong> Enrollment tracking with intake limit enforcement. <strong>FR-SM-05:</strong> Cross-reference against institution-uploaded data.</span></div>
+  <div class="stat-grid">
+    ${statCard('6,12,400','Total Students','All courses · All academic years')}
+    ${statCard('1,247','Pending Verification','Document review required','amber')}
+    ${statCard('18,200','New Enrolments','Academic year 2026-27')}
+    ${statCard('4,820','Lateral Entry','D.Pharm → B.Pharm transfers')}
+  </div>
+  <div class="page-toolbar">
+    <div class="filter-chip active">All</div>
+    <div class="filter-chip">B.Pharm</div><div class="filter-chip">D.Pharm</div><div class="filter-chip">M.Pharm</div><div class="filter-chip">Pharm.D</div>
+    <div class="filter-chip">Year I</div><div class="filter-chip">Year II</div><div class="filter-chip">Year III</div><div class="filter-chip">Year IV</div>
+    <div class="filter-chip">Lateral Entry</div>
+    <div class="filter-chip">Pending Verification</div>
+    <div class="spacer"></div>
+    <input class="form-input" style="width:200px" placeholder="Name, reg. no., Aadhaar…"/>
+    <button class="btn btn-primary">Bulk Verify (FR-SM-05)</button>
+  </div>
+  <div class="card-table">
+    <div class="ct-header"><div class="ct-title">Student Registry — Academic Tracking (FR-SM-03)</div>
+      <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm">Enrollment Report</button><button class="btn btn-ghost btn-sm">Export</button></div>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Student</th><th>Reg. No.</th><th>Course / Year</th><th>Institution</th><th>Enrolment Type</th><th>eKYC</th><th>Academic Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${studentRow('Anjali Krishnan','PCI-STU-2026-001','B.Pharm / Year I','Seven Hills','Regular','Verified','Active')}
+        ${studentRow('Mohammed Farhan','PCI-STU-2026-002','D.Pharm / Year II','JSS Mysuru','Regular','Verified','Active')}
+        ${studentRow('Sneha Patil','PCI-STU-2026-003','M.Pharm / Year I','MAHE Manipal','Regular','Pending','Pending Verification','amber')}
+        ${studentRow('Rahul Nair','PCI-STU-2025-891','B.Pharm / Year III','Amrita Kochi','Lateral Entry','Verified','Active')}
+        ${studentRow('Deepika S.','PCI-STU-2026-004','Pharm.D / Year I','KLE Belagavi','Regular','Failed','Rejected — eKYC failure','red')}
+        ${studentRow('Arjun Mehta','PCI-STU-2026-005','B.Pharm / Year II','SRM Chennai','Regular','Verified','Active')}
+      </tbody>
+    </table>
+  </div>
+</div>`,
+
+// ── 4.7 PHARMACIST MANAGEMENT (FR-PM-01 to FR-PM-05) ─────────────────────
+pharmacist: () => `
+<div class="module-page">
+  <div class="reg-strip">💊 <span><strong>FR-PM-02:</strong> 12 application types supported per PRTS module requirements. <strong>FR-PM-04:</strong> NHA Approved Pharmacist List maintained and published. <strong>FR-PM-03:</strong> Immutable audit logging on all approvals.</span></div>
+  <div class="stat-grid">
+    ${statCard('1,42,600','Active Pharmacists','On State Council registers')}
+    ${statCard('834','Pending PRTS','Registration workflow active','amber')}
+    ${statCard('41,800','NHA Listed','National Health Authority approved')}
+    ${statCard('2,140','Renewals Due','Next 30 days')}
+  </div>
+  <div class="page-toolbar">
+    <div class="filter-chip active">All</div>
+    <div class="filter-chip">Pending PRTS</div>
+    <div class="filter-chip">Active</div>
+    <div class="filter-chip">NHA Listed</div>
+    <div class="filter-chip">Renewal Due</div>
+    <div class="filter-chip">Suspended</div>
+    <div class="filter-chip">Penalty Record</div>
+    <div class="spacer"></div>
+    <select class="form-input" style="width:160px"><option>All States</option><option>Andhra Pradesh</option><option>Karnataka</option><option>Kerala</option><option>Maharashtra</option></select>
+    <input class="form-input" style="width:220px" placeholder="Name, council reg., Aadhaar…"/>
+  </div>
+  <div class="card-table">
+    <div class="ct-header"><div class="ct-title">Pharmacist Registry — PRTS (FR-PM-01, FR-PM-05)</div>
+      <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm">NHA List (FR-PM-04)</button><button class="btn btn-ghost btn-sm">Export</button></div>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Pharmacist</th><th>Council Reg. No.</th><th>State Council</th><th>Qualification</th><th>Application Type</th><th>NHA</th><th>Valid Till</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${pharmacistRow('Dr. Ravi Kumar','BH-P-23-18028','Andhra Pradesh','B.Pharm, M.Pharm, Ph.D','New Registration','Yes','31 Mar 2027','Active')}
+        ${pharmacistRow('Meena Sharma','KA-P-24-00412','Karnataka','B.Pharm','Renewal','No','30 Jun 2026','Active')}
+        ${pharmacistRow('Arun Pillai','KL-P-22-99241','Kerala','D.Pharm','Renewal — Due','Yes','31 Dec 2025','Renewal Due','amber')}
+        ${pharmacistRow('Sunita Gupta','MH-P-25-11204','Maharashtra','B.Pharm','New Registration','No','—','Pending PRTS','amber')}
+        ${pharmacistRow('Dr. Venkat Rao','AP-P-21-44109','Andhra Pradesh','B.Pharm, M.Pharm','Duplicate Certificate','Yes','31 Mar 2026','Active')}
+      </tbody>
+    </table>
+  </div>
+</div>`,
+
+// ── 4.8 ORGANISATION / EMPLOYER MANAGEMENT (FR-OE-01 to FR-OE-04) ─────────
+employer: () => `
+<div class="module-page">
+  <div class="reg-strip">🏢 <span><strong>FR-OE-01:</strong> Organisation registration with document verification and admin approval. <strong>FR-OE-03:</strong> PCI admin moderation on all job postings. <strong>FR-OE-04:</strong> Applicant tracking dashboard for employers.</span></div>
+  <div class="stat-grid">
+    ${statCard('1,240','Registered Employers','Verified pharmacy sector organisations')}
+    ${statCard('18','Pending Approval','New registrations awaiting verification','amber')}
+    ${statCard('3,480','Active Job Postings','Across all employer accounts')}
+    ${statCard('24,600','Total Applications','Pharmacist job applications')}
+  </div>
+  <div class="page-toolbar">
+    <div class="filter-chip active">All Employers</div>
+    <div class="filter-chip">Hospitals</div>
+    <div class="filter-chip">Pharmacy Chains</div>
+    <div class="filter-chip">Pharma Industry</div>
+    <div class="filter-chip">Govt. Institutions</div>
+    <div class="filter-chip">Pending Approval</div>
+    <div class="spacer"></div>
+    <input class="form-input" style="width:220px" placeholder="Search organisation…"/>
+    <button class="btn btn-primary">+ Register Employer</button>
+  </div>
+  <div class="card-table">
+    <div class="ct-header"><div class="ct-title">Employer Registry (FR-OE-02)</div>
+      <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm">Moderate Job Posts (FR-OE-03)</button><button class="btn btn-ghost btn-sm">Export</button></div>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Organisation</th><th>Type</th><th>State</th><th>Active Jobs</th><th>Applications</th><th>Verified</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${employerRow('Apollo Hospitals','Hospital','Multiple States',12,340,'Yes','Active')}
+        ${employerRow('MedPlus Pharmacy','Pharmacy Chain','South India',24,890,'Yes','Active')}
+        ${employerRow('Sun Pharmaceutical','Pharma Industry','Maharashtra',8,220,'Yes','Active')}
+        ${employerRow('AIIMS New Delhi','Govt. Institution','Delhi',4,180,'Yes','Active')}
+        ${employerRow('Cipla Limited','Pharma Industry','Mumbai',6,150,'Pending','Pending Approval','amber')}
+      </tbody>
+    </table>
+  </div>
+</div>`,
+
+// ── 4.9 EXAMINING AUTHORITY MANAGEMENT (FR-EA-01 to FR-EA-05) ─────────────
+ea: () => `
+<div class="module-page">
+  <div class="reg-strip">🎓 <span><strong>FR-EA-01:</strong> EA registration with PCI approval workflow. <strong>FR-EA-03:</strong> Deficiency tracking with submission deadlines. <strong>FR-EA-04:</strong> Appeal workflow — raise, track, and resolve against PCI decisions.</span></div>
+  <div class="stat-grid">
+    ${statCard('140','Approved EAs','Across all states and courses')}
+    ${statCard('8','Pending Registration','New EA applications','amber')}
+    ${statCard('24','Active Deficiencies','Outstanding compliance requirements')}
+    ${statCard('6','Open Appeals','Against PCI decisions')}
+  </div>
+  <div class="page-toolbar">
+    <div class="filter-chip active">All EAs</div>
+    <div class="filter-chip">B.Pharm</div><div class="filter-chip">D.Pharm</div><div class="filter-chip">M.Pharm</div><div class="filter-chip">Pharm.D</div>
+    <div class="filter-chip">With Deficiencies</div>
+    <div class="filter-chip">Pending Registration</div>
+    <div class="spacer"></div>
+    <button class="btn btn-primary">+ Register EA (FR-EA-01)</button>
+  </div>
+  <div class="card-table">
+    <div class="ct-header"><div class="ct-title">Examining Authorities — Registration & Dashboard (FR-EA-02)</div>
+      <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm">Deficiency List (FR-EA-03)</button><button class="btn btn-ghost btn-sm">Export</button></div>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Examining Authority</th><th>State</th><th>Courses</th><th>Affiliated Institutions</th><th>Exam Schedule</th><th>Results Submitted</th><th>Deficiencies</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${eaRow('RGUHS Karnataka','Karnataka','B.Pharm, M.Pharm, Pharm.D',124,'Apr 2026','Yes',0)}
+        ${eaRow('Dr. NTR University AP','Andhra Pradesh','B.Pharm, D.Pharm',98,'May 2026','Yes',2)}
+        ${eaRow('KUHS Kerala','Kerala','All Courses',87,'Apr 2026','Pending',0)}
+        ${eaRow('MUHS Maharashtra','Maharashtra','B.Pharm, D.Pharm',142,'Jun 2026','Pending',4)}
+      </tbody>
+    </table>
+  </div>
+  <div class="panel-row" style="grid-template-columns:1fr 1fr">
+    <div class="section-card">
+      <div class="section-hdr"><div class="section-title">Appeal Management (FR-EA-04)</div></div>
+      <table class="data-table">
+        <thead><tr><th>Appeal ID</th><th>EA</th><th>Against Decision</th><th>Filed Date</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${appealRow('APP-2026-018','MUHS Maharashtra','Deficiency Notice — Lab Equipment','Apr 3, 2026','Under Review')}
+          ${appealRow('APP-2026-014','RGUHS Karnataka','Exam Schedule Rejection','Mar 28, 2026','PCI Response Sent')}
+          ${appealRow('APP-2026-009','Dr. NTR AP','Result Verification Delay','Mar 15, 2026','Resolved')}
+        </tbody>
+      </table>
+    </div>
+    <div class="section-card">
+      <div class="section-hdr"><div class="section-title">Result Handling (FR-EA-05)</div></div>
+      <table class="data-table">
+        <thead><tr><th>EA</th><th>Exam</th><th>Course</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${resultRow('RGUHS Karnataka','B.Pharm Sem 8 Final','B.Pharm','Apr 5, 2026','Verified & Published')}
+          ${resultRow('KUHS Kerala','D.Pharm Year 2 Final','D.Pharm','Apr 8, 2026','Under Verification')}
+          ${resultRow('MUHS Maharashtra','M.Pharm Sem 4','M.Pharm','Pending','Not Submitted','amber')}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>`,
+
+// ── 4.10 INSPECTION MANAGEMENT (FR-IS-01 to FR-IS-07) ────────────────────
+inspection: () => `
+<div class="module-page">
+  <div class="reg-strip">📋 <span><strong>FR-IS-02:</strong> Assignment with conflict-of-interest checks. <strong>FR-IS-04:</strong> Digital reports integrated from Mobile App. <strong>FR-IS-07:</strong> Observer assignment with role-specific data access.</span></div>
+  <div class="stat-grid">
+    ${statCard('156','Active Inspections','89 physical · 67 virtual')}
+    ${statCard('5','Unassigned','Immediate action required — FR-IS-02','red')}
+    ${statCard('284','Inspector Pool','89 available now')}
+    ${statCard('42','Completed This Month','18 deficiency reports raised')}
+  </div>
+  <div class="page-toolbar">
+    <div class="filter-chip active">All</div>
+    <div class="filter-chip">Unassigned</div>
+    <div class="filter-chip">Assigned</div>
+    <div class="filter-chip">In Progress</div>
+    <div class="filter-chip">Report Due</div>
+    <div class="filter-chip">Deficiency Raised</div>
+    <div class="filter-chip">Completed</div>
+    <div class="spacer"></div>
+    <select class="form-input" style="width:160px"><option>All States</option><option>Karnataka</option><option>AP</option><option>Kerala</option></select>
+    <button class="btn btn-primary">+ Schedule Inspection</button>
+  </div>
+  <div class="card-table">
+    <div class="ct-header"><div class="ct-title">Inspection List (FR-IS-01) — Assign · Track · Report · Deficiency</div>
+      <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm">Deficiency List (FR-IS-05)</button><button class="btn btn-ghost btn-sm">Observer Assign (FR-IS-07)</button></div>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Institution</th><th>Type</th><th>Course</th><th>Inspector</th><th>Observer</th><th>Scheduled</th><th>Status</th><th>Deficiencies</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${inspDetailRow2('Seven Hills College of Pharmacy','Physical','B.Pharm','Raj Kumar','None','Apr 12, 2026','Assigned','-')}
+        ${inspDetailRow2('JSS Mysuru','Virtual','D.Pharm','Priya Sharma','Anand V.','Apr 10, 2026','In Progress','-')}
+        ${inspDetailRow2('MAHE Manipal','Physical','All Courses','Anita Mehta','None','Apr 8, 2026','Report Due','Overdue','crit')}
+        ${inspDetailRow2('KLE Belagavi','Virtual','B.Pharm','Unassigned','—','—','Unassigned','—','crit')}
+        ${inspDetailRow2('Amrita Kochi','Physical','Pharm.D','Suresh R.','None','Apr 5, 2026','Completed','3 raised')}
+        ${inspDetailRow2('SRM Chennai','Virtual','M.Pharm','Kavitha N.','None','Apr 15, 2026','Scheduled','-')}
+      </tbody>
+    </table>
+  </div>
+  <div class="section-card">
+    <div class="section-hdr"><div><div class="section-title">Institute Deficiency Verification (FR-IS-06)</div><div class="section-sub">Review institution-submitted compliance responses against raised deficiencies</div></div></div>
+    <table class="data-table">
+      <thead><tr><th>Institution</th><th>Deficiency</th><th>Raised On</th><th>Response Submitted</th><th>Compliance Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${deficiencyRow('Amrita Kochi','Lab equipment shortfall — Pharmaceutics Lab','Mar 20, 2026','Apr 1, 2026','Response Under Review')}
+        ${deficiencyRow('Amrita Kochi','Faculty vacancy — Pharmacology dept.','Mar 20, 2026','Apr 5, 2026','Complied — Verified')}
+        ${deficiencyRow('Amrita Kochi','Animal house — CPCSEA compliance not submitted','Mar 20, 2026','Pending','Awaiting Response')}
+      </tbody>
+    </table>
+  </div>
+</div>`,
+
+// ── 4.11 INSPECTOR MANAGEMENT (FR-IN-01 to FR-IN-04) ─────────────────────
+inspector_mgmt: () => `
+<div class="module-page">
+  <div class="reg-strip">🔍 <span><strong>FR-IN-02:</strong> Approval routing through configured hierarchy with mandatory qualification checks. <strong>FR-IN-04:</strong> Performance tracking — inspection history, report quality, timeliness metrics.</span></div>
+  <div class="stat-grid">
+    ${statCard('284','Total Inspectors','National pool')}
+    ${statCard('15','Pending Approval','New applications — FR-IN-02','amber')}
+    ${statCard('89','Available Now','Ready for assignment')}
+    ${statCard('4.2 / 5','Avg. Performance','Based on 1,240 completed reports')}
+  </div>
+  <div class="page-toolbar">
+    <div class="filter-chip active">All</div>
+    <div class="filter-chip">Pending Approval</div>
+    <div class="filter-chip">Available</div>
+    <div class="filter-chip">On Assignment</div>
+    <div class="filter-chip">On Leave</div>
+    <div class="filter-chip">Suspended</div>
+    <div class="spacer"></div>
+    <select class="form-input" style="width:140px"><option>All Zones</option><option>North</option><option>South</option><option>East</option><option>West</option></select>
+    <button class="btn btn-primary">+ Add Inspector (FR-IN-01)</button>
+  </div>
+  <div class="card-table">
+    <div class="ct-header"><div class="ct-title">Inspector Pool — Mapping & Performance (FR-IN-03, FR-IN-04)</div>
+      <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm">Performance Report</button><button class="btn btn-ghost btn-sm">Export</button></div>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Inspector</th><th>Qualification</th><th>Specialisation</th><th>Zone / State</th><th>Total Inspections</th><th>Avg. Rating</th><th>Report Quality</th><th>Timeliness</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${inspectorRow2('Raj Kumar','B.Pharm, M.Pharm, Ph.D','Pharmaceutics, Infrastructure','North',48,'4.6','Excellent','98%','Available')}
+        ${inspectorRow2('Priya Sharma','B.Pharm, D.Pharm','All Courses','South',32,'4.3','Good','92%','On Assignment')}
+        ${inspectorRow2('Anita Mehta','M.Pharm, Pharm.D','Clinical, Hospital','West',91,'4.8','Excellent','99%','Available')}
+        ${inspectorRow2('Dr. Suresh Nair','Pharm.D','Hospital Affiliation','South',27,'3.9','Average','88%','On Leave')}
+        ${inspectorRow2('Dr. Mohan Rao','B.Pharm, M.Pharm','Infra, Equipment','East',55,'4.5','Good','94%','Available')}
+        ${inspectorRow2('Kavitha Krishnan','M.Pharm, Pharm.D','Library, Education','South',18,'4.1','Good','91%','Pending Approval','amber')}
+      </tbody>
+    </table>
+  </div>
+</div>`,
+
+// ── 4.12 INFRASTRUCTURE MANAGEMENT (FR-IF-01 to FR-IF-04) ────────────────
+infrastructure: () => `
+<div class="module-page">
+  <div class="reg-strip">🏗️ <span><strong>FR-IF-02:</strong> Institution data validated against regulatory norms — shortfalls flagged for scrutiny. <strong>FR-IF-03:</strong> Photo & document review with annotation. <strong>FR-IF-04:</strong> Compliance tracked per institution, per course.</span></div>
+  <div class="stat-grid">
+    ${statCard('8,462','Institutions Tracked','Infra compliance per course')}
+    ${statCard('68%','B.Pharm Avg. Compliance','National infrastructure average')}
+    ${statCard('2,418','Total Deficiencies','Rooms, labs, fittings, facilities')}
+    ${statCard('340','Fully Compliant','4% of total institutions')}
+  </div>
+  <div class="page-toolbar">
+    <div class="filter-chip active">All</div>
+    <div class="filter-chip">Labs Required</div>
+    <div class="filter-chip">Common Facilities</div>
+    <div class="filter-chip">Amenities</div>
+    <div class="filter-chip">Computer Facilities</div>
+    <div class="filter-chip">Classrooms</div>
+    <div class="filter-chip">Deficient</div>
+    <div class="filter-chip">Compliant</div>
+    <div class="spacer"></div>
+    <select class="form-input" style="width:140px"><option>All Courses</option><option>B.Pharm</option><option>D.Pharm</option></select>
+    <select class="form-input" style="width:160px"><option>All States</option><option>Karnataka</option><option>AP</option></select>
+    <button class="btn btn-ghost btn-sm">Export Deficiency Report</button>
+  </div>
+  <div class="card-table">
+    <div class="ct-header"><div class="ct-title">Infrastructure Compliance — Validation & Tracking (FR-IF-01, FR-IF-04)</div></div>
+    <table class="data-table">
+      <thead><tr><th>Institution</th><th>State</th><th>Labs (req/actual)</th><th>Classrooms</th><th>Computer Facilities</th><th>Common Facilities</th><th>Overall</th><th>Photo Review</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${infraRow2('Seven Hills College','Andhra Pradesh','8/8','4/4','Yes','Adequate',74,'4 pending')}
+        ${infraRow2('JSS Mysuru','Karnataka','8/8','5/5','Yes','Adequate',94,'Approved')}
+        ${infraRow2('Amrita Kochi','Kerala','6/8','3/4','Yes','Partial',61,'2 rejected')}
+        ${infraRow2('KLE Belagavi','Karnataka','7/8','4/5','Yes','Adequate',79,'All approved')}
+        ${infraRow2('SRM Chennai','Tamil Nadu','5/8','3/4','No','Inadequate',52,'6 pending')}
+      </tbody>
+    </table>
+  </div>
+</div>`,
+
+// ── 4.13 HOSPITAL MANAGEMENT (FR-HM-01 to FR-HM-03) ──────────────────────
+hospital: () => `
+<div class="module-page">
+  <div class="reg-strip">🏥 <span><strong>FR-HM-01:</strong> Hospital Master — bed strength, specialties, accreditation for Pharm.D. <strong>FR-HM-02:</strong> Ancillary staff records verifiable during inspection. <strong>FR-HM-03:</strong> Hospital-institution mapping with effective date.</span></div>
+  <div class="stat-grid">
+    ${statCard('840','Affiliated Hospitals','For Pharm.D training programme')}
+    ${statCard('12','Pending Approval','Hospital affiliation requests','amber')}
+    ${statCard('4,200','Ancillary Staff','Across all affiliated hospitals')}
+    ${statCard('62','Pharm.D Institutions','Using hospital affiliations')}
+  </div>
+  <div class="page-toolbar">
+    <div class="filter-chip active">All Hospitals</div>
+    <div class="filter-chip">Government</div>
+    <div class="filter-chip">Private</div>
+    <div class="filter-chip">Teaching</div>
+    <div class="filter-chip">Non-Teaching</div>
+    <div class="filter-chip">Pending Approval</div>
+    <div class="spacer"></div>
+    <select class="form-input" style="width:160px"><option>All States</option></select>
+    <button class="btn btn-primary">+ Add Hospital (FR-HM-01)</button>
+  </div>
+  <div class="card-table">
+    <div class="ct-header"><div class="ct-title">Hospital Master — Pharm.D Affiliations (FR-HM-01, FR-HM-03)</div>
+      <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm">Ancillary Staff (FR-HM-02)</button><button class="btn btn-ghost btn-sm">Export</button></div>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Hospital</th><th>Type</th><th>State</th><th>Beds</th><th>Accreditation</th><th>Mapped Institutions</th><th>MoU Valid Till</th><th>Staff Records</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${hospitalRow('AIIMS Visakhapatnam','Government Teaching','Andhra Pradesh',850,'NABH','7',31,'Dec 2027','Verified')}
+        ${hospitalRow('Manipal Hospital','Private Teaching','Karnataka',1200,'NABH, JCI','12','Mar 2027','Verified')}
+        ${hospitalRow('Medical Trust Hospital','Private Non-Teaching','Kerala',450,'NABH','3','Jun 2026','Pending Review','amber')}
+        ${hospitalRow('Govt. Medical College Hospital','Government Teaching','Tamil Nadu',900,'None','5','Sep 2026','Verified')}
+      </tbody>
+    </table>
+  </div>
+</div>`,
+
+// ── 4.14 EQUIPMENT MANAGEMENT (FR-EQ-01 to FR-EQ-03) ─────────────────────
+equipment: () => `
+<div class="module-page">
+  <div class="reg-strip">⚗️ <span><strong>FR-EQ-01:</strong> Equipment Master configurable by authorised officials without code changes. <strong>FR-EQ-02:</strong> Gap identification — institution lists mapped to prescribed requirements. <strong>FR-EQ-03:</strong> Validation via inspection photos and documents.</span></div>
+  <div class="stat-grid">
+    ${statCard('8,462','Institutions Tracked','Equipment compliance per course')}
+    ${statCard('65%','D.Pharm Avg. Compliance','National equipment average')}
+    ${statCard('1,840','Equipment Deficiencies','Items below minimum required')}
+    ${statCard('180+','Equipment Types','In master list — configurable')}
+  </div>
+  <div class="page-toolbar">
+    <div class="filter-chip active">All Institutions</div>
+    <div class="filter-chip">B.Pharm</div><div class="filter-chip">D.Pharm</div><div class="filter-chip">M.Pharm</div><div class="filter-chip">Pharm.D</div>
+    <div class="filter-chip">Deficient</div>
+    <div class="filter-chip">Compliant</div>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost btn-sm">Equipment Master (FR-EQ-01)</button>
+    <button class="btn btn-ghost btn-sm">Export Gap Report</button>
+  </div>
+  <div class="card-table">
+    <div class="ct-header"><div class="ct-title">Equipment Mapping & Validation (FR-EQ-02, FR-EQ-03)</div></div>
+    <table class="data-table">
+      <thead><tr><th>Institution</th><th>State</th><th>Course</th><th>Items Required</th><th>Items Submitted</th><th>Gaps</th><th>Photo Evidence</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${equipRow('Seven Hills College','Andhra Pradesh','B.Pharm',148,142,6,'4 approved','Partial Compliant')}
+        ${equipRow('JSS Mysuru','Karnataka','D.Pharm',104,104,0,'All approved','Compliant')}
+        ${equipRow('Amrita Kochi','Kerala','Pharm.D',86,71,15,'8 pending review','Non-Compliant')}
+        ${equipRow('KLE Belagavi','Karnataka','B.Pharm',148,138,10,'2 rejected','Partial Compliant')}
+      </tbody>
+    </table>
+  </div>
+</div>`,
+
+// ── 4.15 LIBRARY MANAGEMENT (FR-LM-01 to FR-LM-03) ───────────────────────
+library: () => `
+<div class="module-page">
+  <div class="reg-strip">📚 <span><strong>FR-LM-01:</strong> Library requirements per course — min. book counts, journal subscriptions, digital resources — all from master data. <strong>FR-LM-03:</strong> Records accessible to inspectors via Mobile App during on-site visits.</span></div>
+  <div class="stat-grid">
+    ${statCard('8,462','Institutions Tracked','Library compliance per course')}
+    ${statCard('72%','Avg. Compliance','National library average')}
+    ${statCard('982','Deficiencies','Book count, journal, facilities shortfalls')}
+    ${statCard('1,240','Digital Access','Institutions with e-resources')}
+  </div>
+  <div class="page-toolbar">
+    <div class="filter-chip active">All</div>
+    <div class="filter-chip">Books Management</div>
+    <div class="filter-chip">Course Materials</div>
+    <div class="filter-chip">Subject Management</div>
+    <div class="filter-chip">Other Facilities</div>
+    <div class="filter-chip">Deficient</div>
+    <div class="spacer"></div>
+    <select class="form-input" style="width:140px"><option>All Courses</option></select>
+    <button class="btn btn-ghost btn-sm">Export Deficiency Report</button>
+  </div>
+  <div class="card-table">
+    <div class="ct-header"><div class="ct-title">Library Compliance — Per Institution (FR-LM-02)</div></div>
+    <table class="data-table">
+      <thead><tr><th>Institution</th><th>State</th><th>Titles (req/actual)</th><th>Journals (req/actual)</th><th>Seating</th><th>Digital Resources</th><th>Compliance</th><th>Inspector Access</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${libraryRow('Seven Hills College','Andhra Pradesh','1200/1180','15/18','80 seats','Yes',88,'Synced')}
+        ${libraryRow('JSS Mysuru','Karnataka','1200/1480','15/22','120 seats','Yes',100,'Synced')}
+        ${libraryRow('Amrita Kochi','Kerala','1200/980','15/12','60 seats','Yes',64,'Synced')}
+        ${libraryRow('KLE Belagavi','Karnataka','1200/1100','15/14','95 seats','No',71,'Not Synced','amber')}
+      </tbody>
+    </table>
+  </div>
+</div>`,
+
+// ── 4.16 APPLICATION WORKFLOW ENGINE (FR-WE-01 to FR-WE-07) ──────────────
+workflow: () => `
+<div class="module-page">
+  <div class="reg-strip">⚙️ <span><strong>FR-WE-01:</strong> Configurable workflow — definitions stored in Workflow Master. <strong>FR-WE-02:</strong> Mandatory field validation + doc checklist + fee payment before submission. <strong>FR-WE-06:</strong> Query raises pause SLA timer; resubmission triggers fresh review cycle.</span></div>
+  <div class="stat-grid">
+    ${statCard('342','Total Applications','Active in pipeline')}
+    ${statCard('87','SLA Breached','Immediate action required','red')}
+    ${statCard('12','Pending Final','Awaiting Registrar sign-off')}
+    ${statCard('4.2 hrs','Avg. Decision Time','Per stage · Target: 24 hrs')}
+  </div>
+  <div class="page-toolbar">
+    <div class="filter-chip active">All Stages</div>
+    <div class="filter-chip">Submitted (FR-WE-02)</div>
+    <div class="filter-chip">In Scrutiny (FR-WE-03)</div>
+    <div class="filter-chip">In Verification (FR-WE-04)</div>
+    <div class="filter-chip">Query Raised (FR-WE-06)</div>
+    <div class="filter-chip">Resubmitted</div>
+    <div class="filter-chip">Final Approval (FR-WE-05)</div>
+    <div class="filter-chip">SLA Breached</div>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost btn-sm">Bulk Assign</button>
+    <button class="btn btn-ghost btn-sm">Send Query</button>
+    <button class="btn btn-primary">Batch Approve</button>
+  </div>
+  <div class="card-table">
+    <div class="ct-header"><div class="ct-title">Workflow Queue — Status Management (FR-WE-07)</div>
+      <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm">Pipeline View</button><button class="btn btn-ghost btn-sm">Export</button></div>
+    </div>
+    <table class="data-table">
+      <thead><tr><th><input type="checkbox"/></th><th>Application</th><th>Type</th><th>Stage</th><th>Assigned To</th><th>Age</th><th>SLA Status</th><th>Actions (FR-WE-03–06)</th></tr></thead>
+      <tbody>
+        ${wfRow('WF-2026-1042','Seven Hills College','New Affiliation','Scrutiny','Dr. Kavitha N.','2h','22h left')}
+        ${wfRow('WF-2026-1039','JSS Mysuru','Renewal','Verification','Priya S.','18h','6h left','warn')}
+        ${wfRow('WF-2026-1036','MAHE Manipal','Seat Increase','Query Raised','—','32h','SLA BREACH','crit')}
+        ${wfRow('WF-2026-1031','Amrita Kochi','New Affiliation','Final Approval','Registrar','45h','SLA BREACH','crit')}
+        ${wfRow('WF-2026-1029','KLE Belagavi','Renewal','Scrutiny','Unassigned','1h','23h left')}
+        ${wfRow('WF-2026-1024','SRM Chennai','Pharm.D Addition','Verification','Raj Kumar','8h','16h left')}
+      </tbody>
+    </table>
+  </div>
+</div>`,
+
+// ── 4.17 FINANCE & PAYMENT MANAGEMENT (FR-FP-01 to FR-FP-05) ─────────────
+finance: () => `
+<div class="module-page">
+  <div class="reg-strip">💰 <span><strong>FR-FP-03:</strong> Online payment integration with automated receipt generation. <strong>FR-FP-04:</strong> Outstanding dues tracking with automated reminders. <strong>FR-FP-05:</strong> GST-compliant invoices with sequential numbering — PDF downloadable.</span></div>
+  <div class="stat-grid">
+    ${statCard('₹4.2 Cr','Total Collected','FY 2026-27 to date')}
+    ${statCard('₹1.9 Cr','Pending Dues','1,247 unpaid applications')}
+    ${statCard('₹48,000','Recon. Error','3 mismatches — action required','red')}
+    ${statCard('₹6.1 Cr','Annual Target','69% achieved')}
+  </div>
+  <div class="page-toolbar">
+    <div class="filter-chip active">All Transactions</div>
+    <div class="filter-chip">Income & Expenditure (FR-FP-01)</div>
+    <div class="filter-chip">Budget Management (FR-FP-02)</div>
+    <div class="filter-chip">Course Payments (FR-FP-03)</div>
+    <div class="filter-chip">Institution Payments (FR-FP-04)</div>
+    <div class="filter-chip">Invoice Management (FR-FP-05)</div>
+    <div class="filter-chip">Failed</div>
+    <div class="spacer"></div>
+    <select class="form-input" style="width:140px"><option>Apr 2026</option><option>Mar 2026</option></select>
+    <button class="btn btn-ghost btn-sm">Export I&E Statement</button>
+    <button class="btn btn-primary">Generate GST Invoice (FR-FP-05)</button>
+  </div>
+  <div class="panel-row" style="grid-template-columns:1.4fr 1fr">
+    <div class="card-table">
+      <div class="ct-header"><div class="ct-title">Transaction Register</div></div>
+      <table class="data-table">
+        <thead><tr><th>Transaction ID</th><th>Institution</th><th>Fee Type</th><th>Amount</th><th>Mode</th><th>Date</th><th>GST Invoice</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${finRow('TXN-2026-9812','Seven Hills College','B.Pharm Affiliation','₹1,00,000','NEFT','Apr 8, 2026','Collected')}
+          ${finRow('TXN-2026-9811','JSS Mysuru','Renewal — All Courses','₹2,40,000','RTGS','Apr 8, 2026','Collected')}
+          ${finRow('TXN-2026-9810','Amrita Kochi','Pharm.D Affiliation','₹1,80,000','NEFT','Apr 7, 2026','Recon. Error','crit')}
+          ${finRow('TXN-2026-9808','KLE Belagavi','B.Pharm Renewal','₹80,000','Cheque','Apr 6, 2026','Pending','amber')}
+          ${finRow('TXN-2026-9805','SRM Chennai','M.Pharm Affiliation','₹1,20,000','RTGS','Apr 5, 2026','Collected')}
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="form-card" style="margin-bottom:14px">
+        <div class="form-section-title">I&E Summary (FR-FP-01) — Apr 2026</div>
+        ${ieRow('Institution Affiliation Fees','₹2,40,000','Income')}
+        ${ieRow('Renewal Fees — B.Pharm','₹1,80,000','Income')}
+        ${ieRow('Inspector Registration Fees','₹36,000','Income')}
+        ${ieRow('Exam Fees — EA','₹44,000','Income')}
+        <div class="divider-h"></div>
+        ${ieRow('Administration Expenses','₹18,000','Expense')}
+        ${ieRow('Inspection Travel Allowance','₹12,400','Expense')}
+        <div class="divider-h"></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;padding:4px 0"><span>Net for Apr 2026</span><span style="color:var(--green);font-family:var(--mono)">+ ₹4,69,600</span></div>
+      </div>
+      <div class="form-card">
+        <div class="form-section-title">Budget Management (FR-FP-02)</div>
+        ${budgetRow('Registration & Affiliation','₹3.2 Cr','₹2.1 Cr',66)}
+        ${budgetRow('Inspection Division','₹0.8 Cr','₹0.5 Cr',63)}
+        ${budgetRow('Finance & Accounts','₹0.4 Cr','₹0.3 Cr',75)}
+        ${budgetRow('IT & Systems','₹0.6 Cr','₹0.4 Cr',67)}
+      </div>
+    </div>
+  </div>
+</div>`,
+
+// ── 4.17 FINANCE — RECONCILIATION ────────────────────────────────────────
+finance_recon: () => `
+<div class="module-page">
+  <div class="reg-strip">🧾 <span>Match payment gateway records against PCI ledger. Flag mismatches and initiate correction workflow. <strong>FR-FP-03:</strong> Online payment integration — reconciliation critical for receipt accuracy.</span></div>
+  <div class="stat-grid">
+    ${statCard('2,840','Transactions This Month','Payment gateway records')}
+    ${statCard('2,837','Matched','99.9% auto-reconciled')}
+    ${statCard('3','Mismatches','Manual resolution required','red')}
+    ${statCard('₹48,000','Unreconciled Amount','Correction workflow initiated')}
+  </div>
+  <div class="page-toolbar">
+    <div class="filter-chip active">All</div>
+    <div class="filter-chip">Pending Reconciliation</div>
+    <div class="filter-chip">Matched</div>
+    <div class="filter-chip">Mismatches</div>
+    <div class="filter-chip">Correction Requests</div>
+    <div class="spacer"></div>
+    <input type="date" class="form-input" style="width:160px" value="2026-04-08"/>
+    <button class="btn btn-ghost btn-sm">Auto-Reconcile</button>
+    <button class="btn btn-primary">Export Recon Report</button>
+  </div>
+  <div class="card-table">
+    <div class="ct-header"><div class="ct-title">Reconciliation Register — Gateway vs. PCI Ledger</div></div>
+    <table class="data-table">
+      <thead><tr><th>Txn ID</th><th>Institution</th><th>Gateway Amount</th><th>Ledger Amount</th><th>Difference</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${reconRow('TXN-2026-9810','Amrita Kochi','₹1,80,000','₹1,32,000','₹48,000','Apr 7, 2026','Mismatch','crit')}
+        ${reconRow('TXN-2026-9808','KLE Belagavi','₹80,000','₹80,000','—','Apr 6, 2026','Pending Match','amber')}
+        ${reconRow('TXN-2026-9812','Seven Hills','₹1,00,000','₹1,00,000','—','Apr 8, 2026','Matched')}
+        ${reconRow('TXN-2026-9811','JSS Mysuru','₹2,40,000','₹2,40,000','—','Apr 8, 2026','Matched')}
+        ${reconRow('TXN-2026-9805','SRM Chennai','₹1,20,000','₹1,20,000','—','Apr 5, 2026','Matched')}
+      </tbody>
+    </table>
+  </div>
+</div>`,
+
+// ── 4.18 GRIEVANCE MANAGEMENT (FR-GV-01 to FR-GV-05) ─────────────────────
+grievance: () => `
+<div class="module-page">
+  <div class="reg-strip">🎫 <span><strong>FR-GV-01:</strong> Auto-classification by category and priority. <strong>FR-GV-02:</strong> Role-based queue routing with SLA timer. <strong>FR-GV-03:</strong> Automatic escalation on SLA breach. <strong>FR-GV-04:</strong> Resolution requires applicant acknowledgement.</span></div>
+  <div class="stat-grid">
+    ${statCard('23','Open Tickets','Across all categories')}
+    ${statCard('8','SLA Breached','Auto-escalated — FR-GV-03','red')}
+    ${statCard('4.2 days','Avg. Resolution','Target: 7 days')}
+    ${statCard('142','Closed (30 days)','91% applicant acknowledgement')}
+  </div>
+  <div class="page-toolbar">
+    <div class="filter-chip active">All</div>
+    <div class="filter-chip">Fee Issues</div>
+    <div class="filter-chip">Inspector Conduct</div>
+    <div class="filter-chip">Result Discrepancy</div>
+    <div class="filter-chip">Portal Issues</div>
+    <div class="filter-chip">Document Rejection</div>
+    <div class="filter-chip">SLA Breached</div>
+    <div class="spacer"></div>
+    <button class="btn btn-primary">+ Raise Ticket (FR-GV-01)</button>
+  </div>
+  <div class="card-table">
+    <div class="ct-header"><div class="ct-title">Issue Tracker / Ticket Management (FR-GV-02)</div>
+      <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm">Grievance Reports (FR-GV-05)</button><button class="btn btn-ghost btn-sm">Export</button></div>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Ticket ID</th><th>Category</th><th>Institution / User</th><th>Description</th><th>Priority</th><th>Age</th><th>SLA Remaining</th><th>Assigned To</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${grievDetailRow('GR-1042','Fee Refund','SVCP Tirupati','B.Pharm fee paid twice — refund pending',2,24,'Open','crit')}
+        ${grievDetailRow('GR-1039','Inspector Conduct','JSS Mysuru','Partial inspection — report incomplete',1,48,'Escalated','crit')}
+        ${grievDetailRow('GR-1036','Result Discrepancy','MAHE Manipal','Marks mismatch in supplementary result',3,18,'In Progress','warn')}
+        ${grievDetailRow('GR-1031','Portal Login','KLE Belagavi','Admin unable to log in since 3 days',5,72,'Open','ok')}
+        ${grievDetailRow('GR-1029','Doc Rejection','Amrita Kochi','NOC rejected — format mismatch',7,72,'Resolved','ok')}
+      </tbody>
+    </table>
+  </div>
+  <div class="section-card">
+    <div class="section-hdr"><div><div class="section-title">Grievance Analytics (FR-GV-05)</div><div class="section-sub">Ticket volume · Avg. resolution time · SLA compliance rate</div></div></div>
+    <div class="section-body">
+      <div class="stat-grid" style="grid-template-columns:repeat(5,1fr)">
+        ${statCard('23','Open','Current open tickets')}
+        ${statCard('142','Closed (30d)','Last 30 days')}
+        ${statCard('4.2d','Avg. Resolution','Target: 7 days')}
+        ${statCard('91%','Applicant Ack.','Satisfaction rate')}
+        ${statCard('8','SLA Breached','This month')}
+      </div>
+    </div>
+  </div>
+</div>`,
+
+// ── 4.19 REPORTS & MIS (FR-RP-01 to FR-RP-05) ────────────────────────────
+reports: () => `
+<div class="module-page">
+  <div class="reg-strip">📈 <span><strong>FR-RP-03:</strong> All reports exportable in Excel, PDF, and CSV. <strong>FR-RP-04:</strong> Decision Reports are tamper-proof with digital signature verification. <strong>FR-RP-05:</strong> Trend data for evidence-based policy decisions.</span></div>
+  <div class="panel-row" style="grid-template-columns:1fr 1fr">
+    <div class="section-card">
+      <div class="section-hdr"><div><div class="section-title">📊 Pre-Built MIS Reports (FR-RP-01)</div><div class="section-sub">Updated every 24 hours · ★ shared with EC/CC automatically</div></div></div>
+      <div style="padding:0">
+        ${reportRow('★ Student Reports','Enrollment by course, institution, state, year · Pass/fail analytics','FR-RP-01')}
+        ${reportRow('★ Institution Reports','Compliance status, approval history, inspection summary · State-wise drill-down','FR-RP-01')}
+        ${reportRow('★ SIF Reports','Submission status, compliance scores, deficiency summary per session','FR-RP-01')}
+        ${reportRow('★ Inspection Reports','Inspection counts, deficiencies, inspector performance, pending actions','FR-RP-01')}
+        ${reportRow('★ Payment Reports','Collection summary, outstanding dues, course-wise breakdown, reconciliation','FR-RP-01')}
+        ${reportRow('★ Decision Reports (FR-RP-04)','Tamper-proof PCI decisions — digitally signed · Approval/rejection with remarks','FR-RP-04')}
+        ${reportRow('EA Reports','Examining authority affiliation, result submissions, appeal outcomes','FR-RP-01')}
+        ${reportRow('Inspector Performance Report','Inspections assigned vs. completed, rating trends, SLA compliance','FR-RP-01')}
+        ${reportRow('Workflow Pipeline Report','Applications at each stage · Ageing analysis · SLA breach trends','FR-RP-01')}
+        ${reportRow('Grievance Resolution MIS','Ticket volume by category, resolution time, SLA compliance rate (FR-GV-05)','FR-RP-01')}
+      </div>
+    </div>
+    <div>
+      <div class="section-card" style="margin-bottom:14px">
+        <div class="section-hdr"><div><div class="section-title">⚙️ Custom Report Builder</div><div class="section-sub">Filter by state, institution, course, academic year, date range (FR-RP-02)</div></div></div>
+        <div class="section-body">
+          <div class="form-field" style="margin-bottom:10px"><label class="form-label">Module</label><select class="form-input"><option>Institution Management</option><option>Student Management</option><option>Faculty Compliance</option><option>Infrastructure</option><option>Equipment</option><option>Library</option><option>Finance & Payments</option><option>Inspections</option><option>Pharmacist Management</option><option>Grievance Management</option></select></div>
+          <div class="form-grid" style="margin-bottom:10px">
+            <div class="form-field"><label class="form-label">From Date</label><input type="date" class="form-input" value="2026-04-01"/></div>
+            <div class="form-field"><label class="form-label">To Date</label><input type="date" class="form-input" value="2026-04-08"/></div>
+          </div>
+          <div class="form-grid" style="margin-bottom:10px">
+            <div class="form-field"><label class="form-label">State</label><select class="form-input"><option>All States</option><option>Karnataka</option><option>Maharashtra</option><option>Kerala</option></select></div>
+            <div class="form-field"><label class="form-label">Course</label><select class="form-input"><option>All Courses</option><option>B.Pharm</option><option>D.Pharm</option><option>M.Pharm</option><option>Pharm.D</option></select></div>
+          </div>
+          <div class="form-field" style="margin-bottom:12px"><label class="form-label">Export Format (FR-RP-03)</label><select class="form-input"><option>Excel (XLSX)</option><option>PDF</option><option>CSV</option></select></div>
+          <button class="btn btn-primary" style="width:100%">Generate Report</button>
+        </div>
+      </div>
+      <div class="form-card">
+        <div class="form-section-title">Trend Analytics (FR-RP-05)</div>
+        <div style="font-size:11.5px;color:var(--text2);margin-bottom:10px">Year-on-year compliance trend — evidence-based policy decisions for PCI leadership</div>
+        ${trendRow('B.Pharm Compliance','2023: 64%','2024: 68%','2025: 71%')}
+        ${trendRow('Inspection Completion','2023: 78%','2024: 84%','2025: 89%')}
+        ${trendRow('SIF Submission Rate','2023: 71%','2024: 79%','2025: 86%')}
+        ${trendRow('Grievance Resolution','2023: 82%','2024: 88%','2025: 91%')}
+      </div>
+    </div>
+  </div>
+</div>`,
+
+// ── 4.20 COMMUNICATION MANAGEMENT (FR-CM-01 to FR-CM-05) ─────────────────
+communication: () => `
+<div class="module-page">
+  <div class="reg-strip">📣 <span><strong>FR-CM-01:</strong> Notification Engine subscribing to events from all modules. <strong>FR-CM-04:</strong> Admin-configurable templates with dynamic placeholders. <strong>FR-CM-05:</strong> Retry with exponential backoff for failed deliveries.</span></div>
+  <div class="stat-grid">
+    ${statCard('24,800','Messages Sent','Last 30 days — all channels')}
+    ${statCard('94.2%','Delivery Rate','Email + SMS + WhatsApp combined')}
+    ${statCard('8','Scheduled','Pending delivery')}
+    ${statCard('3','Failed','Retry queued — FR-CM-05')}
+  </div>
+  <div class="panel-row" style="grid-template-columns:1fr 1fr">
+    <div class="form-card">
+      <div class="form-section-title">Compose Notification (FR-CM-04)</div>
+      <div class="form-field" style="margin-bottom:10px">
+        <label class="form-label">Channel (FR-CM-01)</label>
+        <div style="display:flex;gap:12px;margin-top:6px">
+          <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer"><input type="checkbox" checked> Email</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer"><input type="checkbox" checked> SMS</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer"><input type="checkbox"> WhatsApp</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer"><input type="checkbox"> In-App</label>
+        </div>
+      </div>
+      <div class="form-field" style="margin-bottom:10px"><label class="form-label">Recipient Group</label>
+        <select class="form-input"><option>All Institutions — B.Pharm (1,240)</option><option>Pending SIF Institutions</option><option>Deficient Institutions</option><option>All Inspectors (284)</option><option>Specific Institution</option><option>All Pharmacists — NHA Listed</option></select></div>
+      <div class="form-field" style="margin-bottom:10px"><label class="form-label">Template (FR-CM-04)</label>
+        <select class="form-input"><option>SIF Submission Reminder</option><option>Deficiency Notice</option><option>Inspection Scheduled</option><option>Fee Due Reminder</option><option>Approval Notification</option><option>Query Raised</option><option>Custom Message</option></select></div>
+      <div class="form-field" style="margin-bottom:10px"><label class="form-label">Message Preview (with dynamic placeholders)</label>
+        <textarea class="form-input" rows="3" style="resize:none">Dear {institution_name}, your SIF submission for {session_year} is due on {deadline_date}. Login at {portal_url} to complete submission. — PCI</textarea></div>
+      <div class="form-field" style="margin-bottom:12px"><label class="form-label">Schedule</label>
+        <select class="form-input"><option>Send Immediately</option><option>Schedule for Later</option></select></div>
+      <button class="btn btn-primary" style="width:100%">Send Notification</button>
+    </div>
+    <div>
+      <div class="section-card" style="margin-bottom:14px">
+        <div class="section-hdr"><div class="section-title">Notification Logs — Email & SMS (FR-CM-02)</div></div>
+        <div style="padding:0">
+          ${commRow('SIF Deadline Reminder','1,240 institutions','Email + SMS','Apr 8, 14:00','Delivered')}
+          ${commRow('Inspection Scheduled','Raj Kumar — 1 institution','Email','Apr 8, 13:22','Delivered')}
+          ${commRow('Fee Due Notice','834 pharmacists','SMS','Apr 7, 10:00','Delivered')}
+          ${commRow('Deficiency Notice','KLE Belagavi','Email','Apr 6, 16:30','Failed — Retry queued','red')}
+          ${commRow('Approval Notification','Seven Hills College','Email + WhatsApp','Apr 6, 11:00','Delivered')}
+          ${commRow('Query Raised','MAHE Manipal','Email + In-App','Apr 5, 09:15','Delivered')}
+        </div>
+      </div>
+      <div class="form-card">
+        <div class="form-section-title">Alerts & Reminders Config (FR-CM-03)</div>
+        ${alertConfigRow('SIF Submission Deadline','15 days before + 7 days before + day of','Email + SMS','Active')}
+        ${alertConfigRow('SLA Breach — Workflow','On breach: immediate escalation','Email + In-App','Active')}
+        ${alertConfigRow('Inspection Scheduled','3 days before inspection date','Email + SMS','Active')}
+        ${alertConfigRow('Fee Payment Due','30 days before + 7 days before','Email + SMS','Active')}
+        ${alertConfigRow('Pharmacist Renewal Due','60 days before expiry','Email + SMS + WhatsApp','Active')}
+      </div>
+    </div>
+  </div>
+</div>`,
+
+// ── 4.21 MASTER LISTS & AUDIT (FR-AU-01 to FR-AU-06) ─────────────────────
+audit: () => `
+<div class="module-page">
+  <div class="reg-strip">🔐 <span><strong>FR-AU-01:</strong> Immutable audit trail — no UPDATE/DELETE on log records (FR-SEC-07). <strong>FR-AU-05:</strong> Approval logs with approver identity, timestamp, remarks — immutable. <strong>FR-AU-06:</strong> Decision Summary — downloadable, institution-wise.</span></div>
+  <div class="stat-grid">
+    ${statCard('1,42,800','Total Log Entries','Last 90 days · Immutable')}
+    ${statCard('3','Security Events','Failed login attempts — flagged')}
+    ${statCard('48','Data Changes','Master data modifications this month')}
+    ${statCard('284','Approval Actions','With full immutable audit trail')}
+  </div>
+  <div class="page-toolbar">
+    <div class="filter-chip active">All Events</div>
+    <div class="filter-chip">Audit Trails (FR-AU-01)</div>
+    <div class="filter-chip">Inspection History (FR-AU-02)</div>
+    <div class="filter-chip">Transaction Status (FR-AU-03)</div>
+    <div class="filter-chip">Faculty Lists (FR-AU-04)</div>
+    <div class="filter-chip">Approval Logs (FR-AU-05)</div>
+    <div class="filter-chip">Decision Summary (FR-AU-06)</div>
+    <div class="filter-chip">SIF Forms</div>
+    <div class="spacer"></div>
+    <input type="date" class="form-input" style="width:150px" value="2026-04-08"/>
+    <input class="form-input" style="width:180px" placeholder="Search user, action…"/>
+    <button class="btn btn-ghost btn-sm">Export Audit Log</button>
+  </div>
+  <div class="card-table">
+    <div class="ct-header"><div class="ct-title">Immutable Audit Trail (FR-AU-01, FR-SEC-07)</div>
+      <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm">Decision Summary (FR-AU-06)</button><button class="btn btn-ghost btn-sm">Faculty Lists (FR-AU-04)</button></div>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Timestamp</th><th>User</th><th>Role</th><th>Action</th><th>Module / Entity</th><th>Record ID</th><th>Details</th><th>IP Address</th></tr></thead>
+      <tbody>
+        ${auditRow('2026-04-08 14:23:11','Dr. Ramesh Kumar','Registrar','Approved','Workflow','WF-2026-1024','Final approval — SRM Chennai Pharm.D · Remarks: All compliant','192.168.1.42')}
+        ${auditRow('2026-04-08 14:18:05','Dr. Kavitha Nair','Scrutinizer','Query Raised','Workflow','WF-2026-1036','Faculty deficiency flagged — MAHE · 2 depts short','10.0.0.21')}
+        ${auditRow('2026-04-08 13:55:42','Suresh Menon','Accts-Maker','Updated','Finance','TXN-2026-9810','Reconciliation note added — Amrita mismatch ₹48k','10.0.0.34')}
+        ${auditRow('2026-04-08 13:41:20','Anand Kumar','IT Admin','Modified','Master Data','FEE-001','M.Pharm fee: ₹80,000 → ₹90,000 · New version v2.4 created','192.168.1.10')}
+        ${auditRow('2026-04-08 13:22:08','Unknown / 103.21.44.12','—','Failed Login','Auth','—','3 consecutive failed login attempts — account locked','103.21.44.12')}
+        ${auditRow('2026-04-08 12:58:00','Priya Sharma','Inspector Approver','Assigned','Inspection','INS-2026-0156','Raj Kumar assigned → Seven Hills · Conflict-of-interest: None','10.0.0.15')}
+        ${auditRow('2026-04-08 12:30:00','Dr. Kavitha Nair','Scrutinizer','Approved','Workflow','WF-2026-1029','Scrutiny complete — KLE Belagavi renewal forwarded to Verifier','10.0.0.21')}
+      </tbody>
+    </table>
+  </div>
+</div>`,
+
+// ── 4.22 CONFIGURATION & SYSTEM SETTINGS (FR-CF-01 to FR-CF-05) ──────────
+config: () => `
+<div class="module-page">
+  <div class="reg-strip">🔧 <span><strong>FR-CF-02:</strong> Workflow Configuration through UI — no code deployment. <strong>FR-CF-03:</strong> Granular permissions matrix per role, per module, per action. <strong>FR-CF-05:</strong> Integration health status for all external APIs.</span></div>
+  <div class="panel-row" style="grid-template-columns:1fr 1fr">
+    <div>
+      <div class="form-card">
+        <div class="form-section-title">Session / Year Configuration (FR-CF-01)</div>
+        <div class="form-grid" style="margin-bottom:12px">
+          <div class="form-field"><label class="form-label">Session Year</label><input class="form-input" value="2026-27"/></div>
+          <div class="form-field"><label class="form-label">Session Type</label><select class="form-input"><option>Annual</option></select></div>
+          <div class="form-field"><label class="form-label">SIF Window Opens</label><input type="date" class="form-input" value="2026-08-01"/></div>
+          <div class="form-field"><label class="form-label">SIF Window Closes</label><input type="date" class="form-input" value="2026-10-31"/></div>
+          <div class="form-field"><label class="form-label">Financial Year</label><input class="form-input" value="2026-27"/></div>
+          <div class="form-field"><label class="form-label">Fee Effective From</label><input type="date" class="form-input" value="2026-08-01"/></div>
+        </div>
+        <div class="flex-row"><button class="btn btn-primary">Save Session Config</button><span class="badge badge-green">Session Active</span></div>
+      </div>
+      <div class="form-card">
+        <div class="form-section-title">Workflow Configuration (FR-CF-02)</div>
+        <div style="font-size:11.5px;color:var(--text3);margin-bottom:12px">Modify approval chains — takes effect immediately, no code deployment required</div>
+        <div class="form-field" style="margin-bottom:10px"><label class="form-label">Scrutiny SLA (hours)</label><input class="form-input" value="48"/></div>
+        <div class="form-field" style="margin-bottom:10px"><label class="form-label">Verification SLA (hours)</label><input class="form-input" value="24"/></div>
+        <div class="form-field" style="margin-bottom:10px"><label class="form-label">Final Approval SLA (hours)</label><input class="form-input" value="12"/></div>
+        <div class="form-field" style="margin-bottom:12px"><label class="form-label">Auto-escalate on SLA breach</label><select class="form-input"><option>Yes — Email + Dashboard alert + Registrar notify</option><option>No</option></select></div>
+        <button class="btn btn-primary">Save Workflow Config</button>
+      </div>
+      <div class="form-card">
+        <div class="form-section-title">System Settings (FR-CF-04)</div>
+        <div class="form-grid" style="margin-bottom:12px">
+          <div class="form-field"><label class="form-label">Session Timeout (min)</label><input class="form-input" value="30"/></div>
+          <div class="form-field"><label class="form-label">Max Login Attempts</label><input class="form-input" value="5"/></div>
+          <div class="form-field"><label class="form-label">Max File Size (MB)</label><input class="form-input" value="10"/></div>
+          <div class="form-field"><label class="form-label">MFA Required</label><select class="form-input"><option>Yes — all admin roles</option></select></div>
+        </div>
+        <button class="btn btn-primary">Save System Settings</button>
+      </div>
+    </div>
+    <div>
+      <div class="form-card" style="margin-bottom:14px">
+        <div class="form-section-title">Role Permissions Matrix (FR-CF-03)</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Granular permissions per role, per module, per action</div>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr><th>Module</th><th>Registrar</th><th>Scrutinizer</th><th>Verifier</th><th>Accounts</th><th>IT Admin</th></tr></thead>
+            <tbody>
+              ${permRow('Dashboard','Full','View','View','Finance only','Full')}
+              ${permRow('Institutions','Full','Scrutinize','Verify','None','View')}
+              ${permRow('Workflow Engine','Approve / Reject','Scrutinize','Verify','None','View')}
+              ${permRow('Finance','View','None','None','Full','View')}
+              ${permRow('Master Data','Approve','None','None','Fee only','Full')}
+              ${permRow('Config & Settings','None','None','None','None','Full')}
+              ${permRow('Audit Logs','Full','View own','View own','View own','Full')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="form-card">
+        <div class="form-section-title">Integration Settings (FR-CF-05)</div>
+        ${integRow('DigiLocker API (NIC/GoI)','Connected — FR-AI-01','green')}
+        ${integRow('Aadhaar eKYC (UIDAI)','Connected — FR-AI-04','green')}
+        ${integRow('e-Sign Service (GoI)','Connected — FR-AI-03','green')}
+        ${integRow('PFMS Payment Gateway','Connected — FR-FP-03','green')}
+        ${integRow('UMANG Platform (MeitY)','Connected — FR-AI-02','green')}
+        ${integRow('SMS Gateway','Connected — FR-CM-01','green')}
+        ${integRow('WhatsApp Business API','Not Connected — FR-CM-01','red')}
+        ${integRow('State Council API (SPC)','Partial — 22/29 SPCs connected','amber')}
+        ${integRow('Video KYC Provider','Not Connected — FR-AI-04','red')}
+        <button class="btn btn-primary btn-sm" style="margin-top:12px">Save Integration Config</button>
+      </div>
+    </div>
+  </div>
+</div>`,
+
+};
+
+
+// ════════════════════════════════════════════════════════
+// COMPONENT HELPERS
+// ════════════════════════════════════════════════════════
+function kpi(icon, label, val, sub, delta, bg) {
+  const cls = delta==='up'?'up':delta==='down'?'down':'neutral';
+  const arrow = delta==='up'?'↑ ':'↓ ';
+  return `<div class="kpi-card">
+    <div class="kpi-top">
+      <div class="kpi-icon" style="background:${bg}">${icon}</div>
+      <span class="kpi-delta ${cls}">${sub}</span>
+    </div>
+    <div class="kpi-val">${val}</div>
+    <div class="kpi-lbl">${label}</div>
+  </div>`;
+}
+
+function approvalItem(name, type, stage, age, ageClass) {
+  const approve = `<button class="btn btn-success btn-xs">✓ Approve</button>`;
+  const query   = `<button class="btn btn-warn btn-xs">? Query</button>`;
+  const reject  = `<button class="btn btn-danger btn-xs">✗ Reject</button>`;
+  return `<div class="approval-item">
+    <div class="ai-top">
+      <div class="ai-name">${name}</div>
+      <span class="age-tag age-${ageClass}">${age}</span>
+    </div>
+    <div class="ai-body">
+      <div class="ai-meta">${type} · ${stage}</div>
+      <div class="ai-actions">${approve}${query}${reject}</div>
+    </div>
+  </div>`;
+}
+
+function inspRow(name, type, status, inspector, cls='') {
+  const stCls = status==='Unassigned'?'badge-red':status==='In Progress'?'badge-amber':'badge-green';
+  return `<tr class="${cls?'row-crit':''}">
+    <td><div class="entity-name">${name}</div></td>
+    <td><span class="badge badge-blue">${type}</span></td>
+    <td><span class="badge ${stCls}">${status}</span></td>
+    <td style="font-size:12px">${inspector==='—'?'<span class="badge badge-red">Unassigned</span>':inspector}</td>
+  </tr>`;
+}
+
+function alertItem(icon, title, desc, time, bg) {
+  return `<div class="alert-item">
+    <div class="alert-icon" style="background:${bg}">${icon}</div>
+    <div class="alert-body">
+      <div class="alert-title">${title}</div>
+      <div class="alert-desc">${desc}</div>
+    </div>
+    <div class="alert-time">${time}</div>
+  </div>`;
+}
+
+function hmRow(course, vals) {
+  const cls = v => v>=90?'hm-90':v>=70?'hm-70':v>=50?'hm-50':'hm-30';
+  return `<div class="hm-label">${course}</div>` +
+    vals.map(v=>`<div class="hm-cell"><span class="hm-val ${cls(v)}">${v}%</span></div>`).join('');
+}
+
+function feeBar(course, pct, amt) {
+  return `<div class="fee-row">
+    <span class="fee-course">${course}</span>
+    <div class="fee-bar-wrap"><div class="fee-bar" style="width:${pct}%"></div></div>
+    <span class="fee-pct">${pct}%</span>
+    <span class="fee-amt">${amt}</span>
+  </div>`;
+}
+
+function grievanceRow(id, cat, inst, age, sla, cls) {
+  const slaPct = Math.min(100, Math.round((age/sla)*100));
+  const barColor = cls==='crit'?'var(--red)':cls==='warn'?'var(--amber)':'var(--green)';
+  return `<div class="grievance-item">
+    <span class="dot dot-${cls==='crit'?'red':cls==='warn'?'amber':'green'}"></span>
+    <div>
+      <div style="font-size:12px;font-weight:600;color:var(--text)">${cat}</div>
+      <div style="font-size:10.5px;color:var(--text3)">${id} · ${inst}</div>
+      <div class="sla-bar" style="margin-top:4px"><div class="sla-fill" style="width:${slaPct}%;background:${barColor}"></div></div>
+    </div>
+    <div style="font-size:11px;color:var(--text3);text-align:center"><div style="font-weight:700;color:var(--text)">${age}d</div>Age</div>
+    <button class="btn btn-ghost btn-xs">View</button>
+  </div>`;
+}
+
+function funnelRow(label, val, total, color) {
+  const pct = Math.round((val/total)*100);
+  return `<div class="funnel-row">
+    <span class="funnel-label">${label}</span>
+    <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${pct}%;background:${color}"></div></div>
+    <span class="funnel-count">${val}</span>
+    <span class="funnel-pct">${pct}%</span>
+  </div>`;
+}
+
+function qa(icon, label, page) {
+  return `<div class="qa-item" onclick="nav('${page}')"><span class="qa-icon">${icon}</span>${label}</div>`;
+}
+
+function statCard(val, lbl, sub, color='') {
+  const cls = color==='red'?'color:var(--red)':color==='amber'?'color:var(--amber)':'';
+  return `<div class="stat-card">
+    <div class="stat-val" style="${cls}">${val}</div>
+    <div class="stat-lbl">${lbl}</div>
+    ${sub?`<div class="stat-sub">${sub}</div>`:''}
+  </div>`;
+}
+
+function instRow(name, state, courses, comp, sif, insp, age, cls='') {
+  const compCls = comp>=90?'badge-green':comp>=70?'badge-amber':'badge-red';
+  const sifCls  = sif==='Approved'?'badge-green':sif==='Verified'?'badge-teal':sif==='Submitted'?'badge-blue':sif==='Query Raised'?'badge-amber':'badge-red';
+  return `<tr class="${cls==='crit'?'row-crit':cls==='warn'?'':''}" style="${cls==='crit'?'background:#fff9f9;':cls==='warn'?'background:#fffcf0;':''}">
+    <td><input type="checkbox"/></td>
+    <td><div class="entity-name">${name}</div><div class="entity-sub">${state}</div></td>
+    <td><div style="font-size:11px;color:var(--text2)">${state}</div></td>
+    <td><div style="font-size:11px">${courses}</div></td>
+    <td><span class="badge ${compCls}">${comp}%</span></td>
+    <td><span class="badge ${sifCls}">${sif}</span></td>
+    <td><div style="font-size:12px">${insp}</div></td>
+    <td><div style="font-size:11px;color:var(--text3)">${age}</div></td>
+    <td><div class="action-btns">
+      <button class="btn btn-ghost btn-xs">View</button>
+      <button class="btn btn-primary btn-xs">Review</button>
+    </div></td>
+  </tr>`;
+}
+
+function inspDetailRow(name, type, course, inspector, date, status, report, cls='') {
+  const stCls = status==='Unassigned'?'badge-red':status==='Completed'?'badge-green':status==='Report Due'?'badge-red':'badge-amber';
+  return `<tr style="${cls==='crit'?'background:#fff9f9;':''}">
+    <td><div class="entity-name">${name}</div></td>
+    <td><span class="badge badge-blue">${type}</span></td>
+    <td style="font-size:12px">${course}</td>
+    <td style="font-size:12px">${inspector==='Unassigned'?'<span class="badge badge-red">Unassigned</span>':inspector}</td>
+    <td style="font-size:11.5px">${date}</td>
+    <td><span class="badge ${stCls}">${status}</span></td>
+    <td><span class="badge ${report==='Overdue'?'badge-red':report==='Submitted'?'badge-green':'badge-gray'}">${report}</span></td>
+    <td><div class="action-btns">
+      <button class="btn btn-ghost btn-xs">View</button>
+      ${inspector==='Unassigned'?'<button class="btn btn-primary btn-xs">Assign</button>':'<button class="btn btn-ghost btn-xs">Reassign</button>'}
+    </div></td>
+  </tr>`;
+}
+
+function inspectorRow(name, spec, zone, done, rating, status, cls='') {
+  const stCls = status==='Pending Approval'?'badge-amber':status==='On Leave'?'badge-gray':status==='On Assignment'?'badge-blue':'badge-green';
+  return `<tr>
+    <td><div class="entity-name">${name}</div></td>
+    <td style="font-size:12px">${spec}</td>
+    <td><span class="badge badge-blue">${zone}</span></td>
+    <td style="font-family:var(--mono);font-size:12px">${done}</td>
+    <td><span class="badge badge-green">★ ${rating}</span></td>
+    <td><span class="badge ${stCls}">${status}</span></td>
+    <td><div class="action-btns">
+      <button class="btn btn-ghost btn-xs">Profile</button>
+      ${status==='Pending Approval'?'<button class="btn btn-success btn-xs">Approve</button>':'<button class="btn btn-ghost btn-xs">Assign</button>'}
+    </div></td>
+  </tr>`;
+}
+
+function studentRow(name, reg, course, year, inst, type, status, cls='') {
+  const stCls = status==='Verified'?'badge-green':status==='Rejected'?'badge-red':'badge-amber';
+  return `<tr>
+    <td><div class="entity-name">${name}</div></td>
+    <td class="mono">${reg}</td>
+    <td><span class="badge badge-blue">${course}</span></td>
+    <td style="font-size:12px">Year ${year}</td>
+    <td style="font-size:12px">${inst}</td>
+    <td><span class="badge ${type==='Regular'?'badge-teal':'badge-purple'}">${type}</span></td>
+    <td><span class="badge ${stCls}">${status}</span></td>
+    <td><div class="action-btns">
+      <button class="btn btn-ghost btn-xs">View</button>
+      ${status==='Pending'?'<button class="btn btn-primary btn-xs">Verify</button>':''}
+    </div></td>
+  </tr>`;
+}
+
+function pharmacistRow(name, council, state, qual, nha, valid, status, cls='') {
+  const stCls = status==='Active'?'badge-green':status==='Pending PRTS'?'badge-amber':'badge-red';
+  return `<tr>
+    <td><div class="entity-name">${name}</div></td>
+    <td class="mono" style="font-size:11.5px">${council}</td>
+    <td style="font-size:12px">${state}</td>
+    <td style="font-size:11.5px">${qual}</td>
+    <td><span class="badge ${nha==='Yes'?'badge-green':'badge-gray'}">${nha}</span></td>
+    <td style="font-size:12px">${valid}</td>
+    <td><span class="badge ${stCls}">${status}</span></td>
+    <td><div class="action-btns"><button class="btn btn-ghost btn-xs">View</button></div></td>
+  </tr>`;
+}
+
+function wfRow(id, name, type, stage, assignee, age, sla, cls='') {
+  const stCls = stage==='Final Approval'?'badge-purple':stage==='Query Raised'?'badge-amber':stage==='Verification'?'badge-teal':'badge-blue';
+  const slaCls = sla==='SLA BREACH'?'badge-red':sla.includes('6h')||sla.includes('1h')?'badge-amber':'badge-green';
+  return `<tr style="${cls==='crit'?'background:#fff9f9;':''}">
+    <td><input type="checkbox"/></td>
+    <td><div class="entity-name">${name}</div><div class="entity-sub">${id}</div></td>
+    <td style="font-size:12px">${type}</td>
+    <td><span class="badge ${stCls}">${stage}</span></td>
+    <td style="font-size:12px">${assignee==='—'?'<span class="badge badge-red">Unassigned</span>':assignee}</td>
+    <td class="mono" style="font-size:12px">${age}</td>
+    <td><span class="badge ${slaCls}">${sla}</span></td>
+    <td><div class="action-btns">
+      <button class="btn btn-success btn-xs">✓</button>
+      <button class="btn btn-warn btn-xs">?</button>
+      <button class="btn btn-danger btn-xs">✗</button>
+    </div></td>
+  </tr>`;
+}
+
+function finRow(txn, name, type, amt, mode, date, status, cls='') {
+  const stCls = status==='Collected'?'badge-green':status==='Recon. Error'?'badge-red':'badge-amber';
+  return `<tr style="${cls==='crit'?'background:#fff9f9;':''}">
+    <td class="mono" style="font-size:11.5px">${txn}</td>
+    <td><div class="entity-name">${name}</div></td>
+    <td style="font-size:12px">${type}</td>
+    <td style="font-family:var(--mono);font-size:12.5px;font-weight:600">${amt}</td>
+    <td><span class="badge badge-blue">${mode}</span></td>
+    <td style="font-size:12px">${date}</td>
+    <td><span class="badge ${stCls}">${status}</span></td>
+    <td><div class="action-btns">
+      <button class="btn btn-ghost btn-xs">View</button>
+      ${status==='Recon. Error'?'<button class="btn btn-warn btn-xs">Fix</button>':''}
+    </div></td>
+  </tr>`;
+}
+
+function grievDetailRow(id, cat, inst, desc, age, sla, status, cls='') {
+  const slaPct = Math.min(100, Math.round((age/sla)*100));
+  const stCls  = status==='Resolved'?'badge-green':status==='Escalated'?'badge-red':'badge-amber';
+  const barColor = cls==='crit'?'var(--red)':cls==='warn'?'var(--amber)':'var(--green)';
+  return `<tr style="${cls==='crit'?'background:#fff9f9;':''}">
+    <td class="mono" style="font-size:11.5px">${id}</td>
+    <td><span class="badge badge-blue">${cat}</span></td>
+    <td style="font-size:12px">${inst}</td>
+    <td style="font-size:12px;max-width:200px">${desc}</td>
+    <td style="font-family:var(--mono)">${age}d</td>
+    <td><div style="font-size:10.5px;color:var(--text3);margin-bottom:3px">${sla}h SLA</div>
+      <div class="sla-bar" style="width:80px"><div class="sla-fill" style="width:${slaPct}%;background:${barColor}"></div></div></td>
+    <td><span class="badge ${stCls}">${status}</span></td>
+    <td><div class="action-btns">
+      <button class="btn btn-ghost btn-xs">View</button>
+      <button class="btn btn-primary btn-xs">Respond</button>
+    </div></td>
+  </tr>`;
+}
+
+function reportRow(title, desc) {
+  return `<div style="padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;transition:background .1s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+    <div><div style="font-size:12.5px;font-weight:600;color:var(--text)">${title}</div><div style="font-size:11px;color:var(--text3);margin-top:1px">${desc}</div></div>
+    <div style="display:flex;gap:5px">
+      <button class="btn btn-ghost btn-xs">Preview</button>
+      <button class="btn btn-primary btn-xs">Export</button>
+    </div>
+  </div>`;
+}
+
+function masterRow(name, desc) {
+  return `<div style="padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;transition:background .1s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+    <div><div style="font-size:12.5px;font-weight:600;color:var(--text)">${name}</div><div style="font-size:11px;color:var(--text3);margin-top:1px">${desc}</div></div>
+    <div style="display:flex;gap:5px">
+      <button class="btn btn-ghost btn-xs">View</button>
+      <button class="btn btn-primary btn-xs">Edit</button>
+    </div>
+  </div>`;
+}
+
+function pendingMasterRow(type, change, by, status) {
+  const stCls = status==='Approved'?'badge-green':'badge-amber';
+  return `<div style="padding:10px 14px;border-bottom:1px solid var(--border)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <span style="font-size:12px;font-weight:600;color:var(--text)">${type}</span>
+      <span class="badge ${stCls}">${status}</span>
+    </div>
+    <div style="font-size:11.5px;color:var(--text2)">${change}</div>
+    <div style="font-size:11px;color:var(--text3);margin-top:3px">By ${by} · Pending Deputy Secretary</div>
+    ${status!=='Approved'?`<div style="display:flex;gap:5px;margin-top:6px"><button class="btn btn-success btn-xs">Approve</button><button class="btn btn-danger btn-xs">Reject</button></div>`:''}
+  </div>`;
+}
+
+function infraRow(name, state, rooms, labs, fittings, comp) {
+  const cls = comp>=90?'badge-green':comp>=70?'badge-amber':'badge-red';
+  return `<tr>
+    <td><div class="entity-name">${name}</div></td>
+    <td style="font-size:12px">${state}</td>
+    <td>${rooms}/11 <span style="font-size:10px;color:var(--text3)">rooms</span></td>
+    <td>${labs}/8 <span style="font-size:10px;color:var(--text3)">labs</span></td>
+    <td>${fittings}/5 <span style="font-size:10px;color:var(--text3)">fittings</span></td>
+    <td><span class="badge ${cls}">${comp}%</span></td>
+    <td><span class="badge badge-blue">Submitted</span></td>
+    <td><div class="action-btns"><button class="btn btn-ghost btn-xs">View</button><button class="btn btn-primary btn-xs">Scrutinize</button></div></td>
+  </tr>`;
+}
+
+function userRow(name, role, zone, login, status, perms, cls='') {
+  const stCls = status==='Active'?'badge-green':status==='Pending Activation'?'badge-amber':'badge-red';
+  return `<tr>
+    <td><div class="entity-name">${name}</div></td>
+    <td><span class="badge badge-purple">${role}</span></td>
+    <td style="font-size:12px">${zone}</td>
+    <td style="font-size:12px">${login}</td>
+    <td><span class="badge ${stCls}">${status}</span></td>
+    <td style="font-size:11.5px;color:var(--text2)">${perms}</td>
+    <td><div class="action-btns">
+      <button class="btn btn-ghost btn-xs">Edit</button>
+      ${status==='Pending Activation'?'<button class="btn btn-success btn-xs">Activate</button>':'<button class="btn btn-danger btn-xs">Suspend</button>'}
+    </div></td>
+  </tr>`;
+}
+
+function auditRow(time, user, role, action, entity, detail, ip) {
+  const aCls = action==='Failed Login'?'badge-red':action==='Approved'?'badge-green':action==='Modified'||action==='Updated'?'badge-amber':'badge-blue';
+  return `<tr style="${action==='Failed Login'?'background:#fff9f9;':''}">
+    <td class="mono" style="font-size:11px">${time}</td>
+    <td style="font-size:12px;font-weight:600">${user}</td>
+    <td><span class="badge badge-purple" style="font-size:10px">${role}</span></td>
+    <td><span class="badge ${aCls}">${action}</span></td>
+    <td class="mono" style="font-size:11.5px">${entity}</td>
+    <td style="font-size:11.5px;color:var(--text2)">${detail}</td>
+    <td class="mono" style="font-size:11px;color:var(--text3)">${ip}</td>
+  </tr>`;
+}
+
+function integRow(name, status, cls) {
+  const stCls = cls==='green'?'badge-green':cls==='amber'?'badge-amber':'badge-red';
+  const dot = cls==='green'?'dot-green':cls==='amber'?'dot-amber':'dot-red';
+  return `<div style="padding:7px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:8px"><span class="dot ${dot}"></span><span style="font-size:12.5px;color:var(--text)">${name}</span></div>
+    <span class="badge ${stCls}">${status}</span>
+  </div>`;
+}
+
+function commRow(template, recipient, channel, time, status, cls='') {
+  const stCls = status==='Delivered'?'badge-green':status==='Failed'?'badge-red':'badge-amber';
+  return `<div style="padding:8px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:12px">
+    <div><div style="font-weight:600;color:var(--text)">${template}</div><div style="font-size:11px;color:var(--text3)">${recipient} · ${channel} · ${time}</div></div>
+    <span class="badge ${stCls}">${status}</span>
+  </div>`;
+}
+
+function moduleStub(icon, title, desc, tabs) {
+  const tabHtml = tabs.map((t,i)=>`<div class="filter-chip${i===0?' active':''}">${t}</div>`).join('');
+  return `<div class="module-page">
+    <div class="reg-strip">${icon} <span><strong>${title}.</strong> ${desc}</span></div>
+    <div class="page-toolbar">${tabHtml}<div class="spacer"></div><button class="btn btn-primary">+ Add New</button></div>
+    <div class="card-table">
+      <div class="ct-header"><div class="ct-title">${title}</div><div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm">Export</button></div></div>
+      <div class="empty-state" style="padding:48px 20px">
+        <div style="font-size:32px;margin-bottom:10px;opacity:.5">${icon}</div>
+        <div style="font-size:14px;font-weight:600;color:var(--text2);margin-bottom:6px">${title}</div>
+        <div style="font-size:13px;color:var(--text3);max-width:320px;line-height:1.6">${desc}</div>
+        <button class="btn btn-primary" style="margin-top:14px">+ Add First Record</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════
+// ── New helpers for FRS-accurate module pages ────────────────────────────
+
+function deptRow(name, roles, count) {
+  return `<div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+    <div><div style="font-size:12.5px;font-weight:600;color:var(--text)">${name}</div><div style="font-size:11px;color:var(--text3);margin-top:1px">${roles}</div></div>
+    <span class="badge badge-blue">${count}</span>
+  </div>`;
+}
+
+function wfHierarchyRow(type, chain, levels) {
+  return `<div style="padding:8px 0;border-bottom:1px solid var(--border)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
+      <span style="font-size:12px;font-weight:600;color:var(--text)">${type}</span>
+      <span class="badge badge-blue">${levels}</span>
+    </div>
+    <div style="font-size:11px;color:var(--text3)">${chain}</div>
+  </div>`;
+}
+
+function masterDetailRow(icon, name, ref, desc, version, page) {
+  return `<div style="padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;transition:background .1s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+    <div style="display:flex;align-items:flex-start;gap:10px">
+      <span style="font-size:14px;margin-top:1px">${icon}</span>
+      <div>
+        <div style="font-size:12.5px;font-weight:600;color:var(--text)">${name} <span class="badge badge-gray" style="font-size:9px">${ref}</span></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:1px">${desc}</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:12px">
+      <span style="font-size:10px;color:var(--text3)">${version}</span>
+      <button class="btn btn-ghost btn-xs">View</button>
+      <button class="btn btn-primary btn-xs">Edit</button>
+    </div>
+  </div>`;
+}
+
+function progRow(name, dur, gazette, intake, status) {
+  return `<tr>
+    <td><div class="entity-name">${name}</div></td>
+    <td style="font-size:12px">${dur}</td>
+    <td class="mono" style="font-size:11px">${gazette}</td>
+    <td style="font-size:12px">${intake}</td>
+    <td><span class="badge badge-green">${status}</span></td>
+    <td><div class="action-btns"><button class="btn btn-ghost btn-xs">View</button><button class="btn btn-primary btn-xs">Edit</button></div></td>
+  </tr>`;
+}
+
+function eaMasterRow(name, state, courses, insts, status) {
+  return `<tr>
+    <td><div class="entity-name">${name}</div></td>
+    <td style="font-size:12px">${state}</td>
+    <td style="font-size:11.5px">${courses}</td>
+    <td class="mono" style="font-size:12px">${insts}</td>
+    <td><span class="badge badge-green">${status}</span></td>
+    <td><div class="action-btns"><button class="btn btn-ghost btn-xs">View</button><button class="btn btn-primary btn-xs">Edit</button></div></td>
+  </tr>`;
+}
+
+function eaRow(name, state, courses, insts, exam, results, deficiencies) {
+  const defCls = deficiencies > 0 ? 'badge-red' : 'badge-green';
+  const resCls = results === 'Yes' ? 'badge-green' : results === 'Pending' ? 'badge-amber' : 'badge-gray';
+  return `<tr>
+    <td><div class="entity-name">${name}</div></td>
+    <td style="font-size:12px">${state}</td>
+    <td style="font-size:11.5px">${courses}</td>
+    <td class="mono">${insts}</td>
+    <td style="font-size:12px">${exam}</td>
+    <td><span class="badge ${resCls}">${results}</span></td>
+    <td><span class="badge ${defCls}">${deficiencies > 0 ? deficiencies + ' open' : 'None'}</span></td>
+    <td><div class="action-btns"><button class="btn btn-ghost btn-xs">View</button><button class="btn btn-primary btn-xs">Review</button></div></td>
+  </tr>`;
+}
+
+function appealRow(id, ea, decision, date, status) {
+  const stCls = status === 'Resolved' ? 'badge-green' : status === 'PCI Response Sent' ? 'badge-blue' : 'badge-amber';
+  return `<tr>
+    <td class="mono" style="font-size:11px">${id}</td>
+    <td style="font-size:12px;font-weight:600">${ea}</td>
+    <td style="font-size:12px">${decision}</td>
+    <td style="font-size:12px">${date}</td>
+    <td><span class="badge ${stCls}">${status}</span></td>
+    <td><div class="action-btns"><button class="btn btn-ghost btn-xs">View</button><button class="btn btn-primary btn-xs">Respond</button></div></td>
+  </tr>`;
+}
+
+function resultRow(ea, exam, course, submitted, status, cls='') {
+  const stCls = status.includes('Verified') ? 'badge-green' : status.includes('Verification') ? 'badge-amber' : 'badge-red';
+  return `<tr style="${cls === 'amber' ? 'background:#fffcf0' : ''}">
+    <td style="font-size:12px;font-weight:600">${ea}</td>
+    <td style="font-size:12px">${exam}</td>
+    <td><span class="badge badge-blue">${course}</span></td>
+    <td style="font-size:12px">${submitted}</td>
+    <td><span class="badge ${stCls}">${status}</span></td>
+    <td><div class="action-btns"><button class="btn btn-ghost btn-xs">View</button><button class="btn btn-primary btn-xs">Process</button></div></td>
+  </tr>`;
+}
+
+function inspDetailRow2(name, type, course, inspector, observer, date, status, deficiencies, cls='') {
+  const stCls = status === 'Unassigned' ? 'badge-red' : status === 'Completed' ? 'badge-green' : status === 'Report Due' ? 'badge-red' : 'badge-amber';
+  const defDisplay = deficiencies === '-' ? '<span style="color:var(--text3)">—</span>' : deficiencies === 'Overdue' ? '<span class="badge badge-red">Overdue</span>' : deficiencies.includes('raised') ? `<span class="badge badge-amber">${deficiencies}</span>` : '<span style="color:var(--text3)">—</span>';
+  return `<tr style="${cls === 'crit' ? 'background:#fff9f9;' : ''}">
+    <td><div class="entity-name">${name}</div></td>
+    <td><span class="badge badge-blue">${type}</span></td>
+    <td style="font-size:12px">${course}</td>
+    <td style="font-size:12px">${inspector === 'Unassigned' ? '<span class="badge badge-red">Unassigned</span>' : inspector}</td>
+    <td style="font-size:12px">${observer}</td>
+    <td style="font-size:11.5px">${date}</td>
+    <td><span class="badge ${stCls}">${status}</span></td>
+    <td>${defDisplay}</td>
+    <td><div class="action-btns">
+      <button class="btn btn-ghost btn-xs">View</button>
+      ${inspector === 'Unassigned' ? '<button class="btn btn-primary btn-xs">Assign</button>' : '<button class="btn btn-ghost btn-xs">Report</button>'}
+    </div></td>
+  </tr>`;
+}
+
+function deficiencyRow(inst, desc, raised, response, status) {
+  const stCls = status.includes('Verified') ? 'badge-green' : status.includes('Review') ? 'badge-amber' : 'badge-gray';
+  return `<tr>
+    <td style="font-size:12px;font-weight:600">${inst}</td>
+    <td style="font-size:12px;max-width:200px">${desc}</td>
+    <td style="font-size:11.5px">${raised}</td>
+    <td style="font-size:11.5px">${response}</td>
+    <td><span class="badge ${stCls}">${status}</span></td>
+    <td><div class="action-btns"><button class="btn btn-ghost btn-xs">View</button><button class="btn btn-primary btn-xs">Verify</button></div></td>
+  </tr>`;
+}
+
+function inspectorRow2(name, qual, spec, zone, done, rating, quality, timeliness, status, cls='') {
+  const stCls = status === 'Pending Approval' ? 'badge-amber' : status === 'On Leave' ? 'badge-gray' : status === 'On Assignment' ? 'badge-blue' : 'badge-green';
+  return `<tr>
+    <td><div class="entity-name">${name}</div></td>
+    <td style="font-size:11px">${qual}</td>
+    <td style="font-size:11.5px">${spec}</td>
+    <td><span class="badge badge-blue">${zone}</span></td>
+    <td class="mono">${done}</td>
+    <td><span class="badge badge-green">★ ${rating}</span></td>
+    <td><span class="badge ${quality === 'Excellent' ? 'badge-green' : quality === 'Good' ? 'badge-teal' : 'badge-amber'}">${quality}</span></td>
+    <td class="mono" style="font-size:12px">${timeliness}</td>
+    <td><span class="badge ${stCls}">${status}</span></td>
+    <td><div class="action-btns">
+      <button class="btn btn-ghost btn-xs">Profile</button>
+      ${status === 'Pending Approval' ? '<button class="btn btn-success btn-xs">Approve</button>' : '<button class="btn btn-ghost btn-xs">Assign</button>'}
+    </div></td>
+  </tr>`;
+}
+
+function infraRow2(name, state, labs, classrooms, computers, facilities, comp, photos) {
+  const cls = comp >= 90 ? 'badge-green' : comp >= 70 ? 'badge-amber' : 'badge-red';
+  const photoCls = photos === 'Approved' ? 'badge-green' : photos === 'All approved' ? 'badge-green' : photos.includes('rejected') ? 'badge-red' : 'badge-amber';
+  return `<tr style="${comp < 65 ? 'background:#fff9f9;' : ''}">
+    <td><div class="entity-name">${name}</div></td>
+    <td style="font-size:12px">${state}</td>
+    <td style="font-size:12px">${labs}</td>
+    <td style="font-size:12px">${classrooms}</td>
+    <td><span class="badge ${computers === 'Yes' ? 'badge-green' : 'badge-red'}">${computers}</span></td>
+    <td><span class="badge ${facilities === 'Adequate' ? 'badge-green' : facilities === 'Partial' ? 'badge-amber' : 'badge-red'}">${facilities}</span></td>
+    <td><span class="badge ${cls}">${comp}%</span></td>
+    <td><span class="badge ${photoCls}">${photos}</span></td>
+    <td><div class="action-btns"><button class="btn btn-ghost btn-xs">View</button><button class="btn btn-primary btn-xs">Validate</button></div></td>
+  </tr>`;
+}
+
+function hospitalRow(name, type, state, beds, accred, insts, mouTill, staffStatus, cls='') {
+  const stCls = cls === 'amber' ? 'badge-amber' : 'badge-green';
+  return `<tr style="${cls === 'amber' ? 'background:#fffcf0;' : ''}">
+    <td><div class="entity-name">${name}</div></td>
+    <td style="font-size:12px">${type}</td>
+    <td style="font-size:12px">${state}</td>
+    <td class="mono">${beds}</td>
+    <td style="font-size:12px">${accred}</td>
+    <td class="mono">${insts}</td>
+    <td style="font-size:12px">${mouTill}</td>
+    <td><span class="badge ${stCls}">${staffStatus}</span></td>
+    <td><div class="action-btns"><button class="btn btn-ghost btn-xs">View</button><button class="btn btn-primary btn-xs">Edit</button></div></td>
+  </tr>`;
+}
+
+function equipRow(name, state, course, required, submitted, gaps, photos, status) {
+  const stCls = status === 'Compliant' ? 'badge-green' : status.includes('Partial') ? 'badge-amber' : 'badge-red';
+  return `<tr style="${gaps > 10 ? 'background:#fff9f9;' : ''}">
+    <td><div class="entity-name">${name}</div></td>
+    <td style="font-size:12px">${state}</td>
+    <td><span class="badge badge-blue">${course}</span></td>
+    <td class="mono">${required}</td>
+    <td class="mono">${submitted}</td>
+    <td><span class="badge ${gaps > 0 ? 'badge-red' : 'badge-green'}">${gaps > 0 ? gaps + ' gaps' : 'None'}</span></td>
+    <td style="font-size:12px">${photos}</td>
+    <td><span class="badge ${stCls}">${status}</span></td>
+    <td><div class="action-btns"><button class="btn btn-ghost btn-xs">View</button><button class="btn btn-primary btn-xs">Validate</button></div></td>
+  </tr>`;
+}
+
+function libraryRow(name, state, titles, journals, seating, digital, comp, inspSync, cls='') {
+  const compCls = comp >= 90 ? 'badge-green' : comp >= 70 ? 'badge-amber' : 'badge-red';
+  return `<tr style="${cls === 'amber' ? 'background:#fffcf0;' : ''}">
+    <td><div class="entity-name">${name}</div></td>
+    <td style="font-size:12px">${state}</td>
+    <td style="font-size:12px">${titles}</td>
+    <td style="font-size:12px">${journals}</td>
+    <td style="font-size:12px">${seating}</td>
+    <td><span class="badge ${digital === 'Yes' ? 'badge-green' : 'badge-amber'}">${digital}</span></td>
+    <td><span class="badge ${compCls}">${comp}%</span></td>
+    <td><span class="badge ${inspSync === 'Synced' ? 'badge-green' : 'badge-amber'}">${inspSync}</span></td>
+    <td><div class="action-btns"><button class="btn btn-ghost btn-xs">View</button><button class="btn btn-primary btn-xs">Validate</button></div></td>
+  </tr>`;
+}
+
+function employerRow(name, type, states, jobs, apps, verified, status, cls='') {
+  const stCls = cls === 'amber' ? 'badge-amber' : 'badge-green';
+  return `<tr style="${cls === 'amber' ? 'background:#fffcf0;' : ''}">
+    <td><div class="entity-name">${name}</div></td>
+    <td><span class="badge badge-purple">${type}</span></td>
+    <td style="font-size:12px">${states}</td>
+    <td class="mono">${jobs}</td>
+    <td class="mono">${apps}</td>
+    <td><span class="badge ${verified === 'Yes' ? 'badge-green' : 'badge-amber'}">${verified}</span></td>
+    <td><span class="badge ${stCls}">${status}</span></td>
+    <td><div class="action-btns"><button class="btn btn-ghost btn-xs">View</button><button class="btn btn-primary btn-xs">Moderate</button></div></td>
+  </tr>`;
+}
+
+function reconRow(txn, name, gateway, ledger, diff, date, status, cls='') {
+  const stCls = cls === 'crit' ? 'badge-red' : cls === 'amber' ? 'badge-amber' : 'badge-green';
+  return `<tr style="${cls === 'crit' ? 'background:#fff9f9;' : ''}">
+    <td class="mono" style="font-size:11px">${txn}</td>
+    <td style="font-size:12px;font-weight:600">${name}</td>
+    <td class="mono">${gateway}</td>
+    <td class="mono">${ledger}</td>
+    <td class="mono" style="${diff !== '—' ? 'color:var(--red);font-weight:700' : 'color:var(--text3)'}">${diff}</td>
+    <td style="font-size:12px">${date}</td>
+    <td><span class="badge ${stCls}">${status}</span></td>
+    <td><div class="action-btns"><button class="btn btn-ghost btn-xs">View</button>${cls === 'crit' ? '<button class="btn btn-warn btn-xs">Fix</button>' : ''}</div></td>
+  </tr>`;
+}
+
+function ieRow(label, amount, type) {
+  const col = type === 'Income' ? 'var(--green)' : 'var(--red)';
+  const sign = type === 'Income' ? '+' : '−';
+  return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
+    <span style="color:var(--text2)">${label}</span>
+    <span style="font-family:var(--mono);font-weight:600;color:${col}">${sign} ${amount}</span>
+  </div>`;
+}
+
+function budgetRow(dept, alloc, spent, pct) {
+  return `<div style="margin-bottom:9px">
+    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+      <span style="color:var(--text2)">${dept}</span>
+      <span style="font-family:var(--mono);color:var(--text);font-weight:600">${spent} / ${alloc}</span>
+    </div>
+    <div style="background:var(--surface2);border-radius:3px;height:6px"><div style="height:100%;border-radius:3px;background:var(--accent);width:${pct}%"></div></div>
+  </div>`;
+}
+
+function reportRow(title, desc, ref) {
+  return `<div style="padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;transition:background .1s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+    <div>
+      <div style="font-size:12.5px;font-weight:600;color:var(--text)">${title} <span class="badge badge-gray" style="font-size:9px">${ref}</span></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:1px">${desc}</div>
+    </div>
+    <div style="display:flex;gap:5px;flex-shrink:0;margin-left:12px">
+      <button class="btn btn-ghost btn-xs">Preview</button>
+      <button class="btn btn-primary btn-xs">Export</button>
+    </div>
+  </div>`;
+}
+
+function masterRow(name, desc) {
+  return `<div style="padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;transition:background .1s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+    <div><div style="font-size:12.5px;font-weight:600;color:var(--text)">${name}</div><div style="font-size:11px;color:var(--text3);margin-top:1px">${desc}</div></div>
+    <div style="display:flex;gap:5px"><button class="btn btn-ghost btn-xs">View</button><button class="btn btn-primary btn-xs">Edit</button></div>
+  </div>`;
+}
+
+function pendingMasterRow(type, change, by, status) {
+  const stCls = status === 'Approved' ? 'badge-green' : status.includes('DS') ? 'badge-amber' : 'badge-amber';
+  return `<div style="padding:10px 14px;border-bottom:1px solid var(--border)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <span style="font-size:12px;font-weight:600;color:var(--text)">${type}</span>
+      <span class="badge ${stCls}">${status}</span>
+    </div>
+    <div style="font-size:11.5px;color:var(--text2)">${change}</div>
+    <div style="font-size:11px;color:var(--text3);margin-top:3px">By ${by}</div>
+    ${status !== 'Approved' ? `<div style="display:flex;gap:5px;margin-top:6px"><button class="btn btn-success btn-xs">Approve</button><button class="btn btn-danger btn-xs">Reject</button></div>` : ''}
+  </div>`;
+}
+
+function alertConfigRow(event, timing, channels, status) {
+  return `<div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <div style="font-size:12px;font-weight:600;color:var(--text)">${event}</div>
+      <div style="font-size:10.5px;color:var(--text3);margin-top:1px">${timing} · ${channels}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <span class="badge badge-green">${status}</span>
+      <button class="btn btn-ghost btn-xs">Configure</button>
+    </div>
+  </div>`;
+}
+
+function trendRow(metric, y1, y2, y3) {
+  return `<div style="padding:7px 0;border-bottom:1px solid var(--border);font-size:12px">
+    <div style="font-weight:600;color:var(--text);margin-bottom:3px">${metric}</div>
+    <div style="display:flex;gap:12px;color:var(--text3)"><span>${y1}</span><span>→ ${y2}</span><span style="color:var(--green);font-weight:600">→ ${y3}</span></div>
+  </div>`;
+}
+
+function permRow(module, reg, scrut, verif, accts, it) {
+  const pCell = (v) => {
+    const cls = v === 'Full' ? 'badge-green' : v === 'None' ? 'badge-gray' : 'badge-blue';
+    return `<td><span class="badge ${cls}" style="font-size:10px">${v}</span></td>`;
+  };
+  return `<tr><td style="font-size:12px;font-weight:600;color:var(--text)">${module}</td>${pCell(reg)}${pCell(scrut)}${pCell(verif)}${pCell(accts)}${pCell(it)}</tr>`;
+}
+
+function grievDetailRow(id, cat, inst, desc, age, sla, status, cls='') {
+  const slaPct = Math.min(100, Math.round((age / sla) * 100));
+  const stCls  = status === 'Resolved' ? 'badge-green' : status === 'Escalated' ? 'badge-red' : 'badge-amber';
+  const barColor = cls === 'crit' ? 'var(--red)' : cls === 'warn' ? 'var(--amber)' : 'var(--green)';
+  return `<tr style="${cls === 'crit' ? 'background:#fff9f9;' : ''}">
+    <td class="mono" style="font-size:11px">${id}</td>
+    <td><span class="badge badge-blue">${cat}</span></td>
+    <td style="font-size:12px">${inst}</td>
+    <td style="font-size:12px;max-width:180px">${desc}</td>
+    <td><span class="badge ${age <= 2 ? 'badge-red' : age <= 5 ? 'badge-amber' : 'badge-gray'}">${age <= 2 ? 'High' : age <= 5 ? 'Med' : 'Low'}</span></td>
+    <td class="mono" style="font-size:12px">${age}d</td>
+    <td><div style="font-size:10px;color:var(--text3);margin-bottom:3px">${sla}h SLA</div><div class="sla-bar" style="width:80px"><div class="sla-fill" style="width:${slaPct}%;background:${barColor}"></div></div></td>
+    <td style="font-size:12px">Assigned</td>
+    <td><span class="badge ${stCls}">${status}</span></td>
+    <td><div class="action-btns"><button class="btn btn-ghost btn-xs">View</button><button class="btn btn-primary btn-xs">Respond</button></div></td>
+  </tr>`;
+}
+
+// INIT
+// ════════════════════════════════════════════════════════
+renderNav();
+nav('dashboard');
+
+// Live search hint
+document.getElementById('global-search').addEventListener('input', function() {
+  if (this.value.length > 2) this.style.borderColor = 'var(--accent)';
+  else this.style.borderColor = '';
+});
+</script>
+</body>
+</html>
